@@ -25,7 +25,7 @@ __all__ = ["TrainingPipeline"]
 
 
 class TrainingPipeline(ABC):
-    NUM_STEPS = 1000
+    NUM_STEPS = 10000
     BATCH_SIZE = 32
     EVAL_EXAMPLES = 1000
     TEST_EXAMPLES = 10000
@@ -86,7 +86,7 @@ class TrainingPipeline(ABC):
         with no_grad():
             test_outputs: Tensor = model(test_data)
             test_loss = loss_fn(test_outputs, test_labels)
-            test_accuracy = (test_outputs.argmax(dim=1) == test_labels).float().mean()
+            test_accuracy = (test_outputs.argmax(dim=1) == test_labels).sum() / test_examples
 
         self.logger.add_scalar("loss_test", test_loss, i+1)
         self.logger.add_scalar("accuracy_test", test_accuracy, i+1)
@@ -101,8 +101,8 @@ class TrainingPipeline(ABC):
     def get_model(self) -> Module:
         input_dim = 2
         output_dim = 2
-        hidden_dim = 64
-        n_layers = 2
+        hidden_dim = 1024
+        n_layers = 24
         nonlinearity_class = ReLU
 
         in_dims = [input_dim] + [hidden_dim] * n_layers
