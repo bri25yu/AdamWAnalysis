@@ -1,4 +1,4 @@
-from numpy import ndarray
+from numpy import ndarray, float32
 from numpy.random import randint, rand
 from numpy.linalg import norm
 
@@ -52,7 +52,7 @@ class Env:
         closest_center_indices = closest_to_1.argmin(axis=1)
         labels: ndarray = center_labels[closest_center_indices]
 
-        self.centers = centers
+        self.centers = centers.astype(float32)
         self.center_labels = center_labels
-        self.points = points
+        self.points = points.astype(float32)
         self.labels = labels

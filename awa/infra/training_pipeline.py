@@ -6,16 +6,16 @@ import time
 
 from itertools import chain
 
-from tqdm.notebook import trange
+from tqdm.notebook import trange, tqdm
 
 from tensorboardX import SummaryWriter
 
-from numpy.random import np_seed
+from numpy.random import seed as np_seed
 
 from torch import Tensor, from_numpy, no_grad
 from torch.nn import Module, CrossEntropyLoss, ReLU, Sequential, Linear, Identity
 from torch.optim import Optimizer
-from torch.random import seed as torch_seed
+from torch.random import manual_seed as torch_seed
 
 from awa import TRAIN_OUTPUT_DIR, RESULTS_DIR
 from awa.infra.env import Env
@@ -34,7 +34,7 @@ class TrainingPipeline(ABC):
     def get_optimizer(self, params) -> Optimizer:
         pass
 
-    def run(self, seed: int=42, leave_tqdm=True, base_log_dir=TRAIN_OUTPUT_DIR) -> None:
+    def run(self, seed: int=42, leave_tqdm=True) -> None:
         num_steps = self.NUM_STEPS
         batch_size = self.BATCH_SIZE
         train_examples = num_steps * batch_size
@@ -47,12 +47,12 @@ class TrainingPipeline(ABC):
 
         env = Env(total_examples, 2)
         model = self.get_model()
-        optimizer = self.get_optimizer()
+        optimizer = self.get_optimizer(model.parameters())
         loss_fn = CrossEntropyLoss()
-        self.setup_logging(base_log_dir, seed)
+        self.setup_logging(seed)
 
-        train_data = env.points[:train_examples]
-        train_labels = env.labels[:train_examples]
+        train_data = from_numpy(env.points[:train_examples])
+        train_labels = from_numpy(env.labels[:train_examples])
         val_data = from_numpy(env.points[train_examples: train_examples + eval_examples])
         val_labels = from_numpy(env.labels[train_examples: train_examples + eval_examples])
         test_data = from_numpy(env.points[train_examples + eval_examples: train_examples + eval_examples + test_examples])
@@ -63,8 +63,8 @@ class TrainingPipeline(ABC):
         assert test_data.size()[0] == test_examples
 
         for i in trange(num_steps, desc="Training", leave=leave_tqdm):
-            batch_data = from_numpy(train_data[batch_size * i: batch_size * (i+1)])
-            batch_labels = from_numpy(train_labels[batch_size * i: batch_size * (i+1)])
+            batch_data = train_data[batch_size * i: batch_size * (i+1)]
+            batch_labels = train_labels[batch_size * i: batch_size * (i+1)]
 
             model.train()
             batch_logits: Tensor = model(batch_data)
@@ -86,15 +86,17 @@ class TrainingPipeline(ABC):
         with no_grad():
             test_outputs: Tensor = model(test_data)
             test_loss = loss_fn(test_outputs, test_labels)
-            test_accuracy = (test_outputs.argmax(dim=1) == test_labels).mean()
+            test_accuracy = (test_outputs.argmax(dim=1) == test_labels).float().mean()
 
         self.logger.add_scalar("loss_test", test_loss, i+1)
         self.logger.add_scalar("accuracy_test", test_accuracy, i+1)
 
     def benchmark(self) -> None:
+        self.use_benchmark_logging = True
+
         seeds = [41, 42, 43]
-        for seed in seeds:
-            self.run(seed=seed, leave_tqdm=False, base_log_dir=RESULTS_DIR)
+        for seed in tqdm(seeds, desc="Benchmarking"):
+            self.run(seed=seed, leave_tqdm=False)
 
     def get_model(self) -> Module:
         input_dim = 2
@@ -107,7 +109,7 @@ class TrainingPipeline(ABC):
         out_dims = [hidden_dim] * n_layers + [output_dim]
         activations = [nonlinearity_class] * n_layers + [Identity]
 
-        return Sequential(chain(
+        return Sequential(*chain.from_iterable(
             (Linear(i, o), a()) for i, o, a in zip(in_dims, out_dims, activations)
         ))
 
@@ -115,6 +117,10 @@ class TrainingPipeline(ABC):
     def name(self) -> str:
         return self.__class__.__name__
 
-    def setup_logging(self, base_log_dir: str, seed: int) -> None:
-        log_dir = os.path.join(base_log_dir, self.name, f"seed={seed}", f"run{time.time()}")
+    def setup_logging(self, seed: int) -> None:
+        if getattr(self, "use_benchmark_logging", False):
+            log_dir = os.path.join(RESULTS_DIR, self.name, f"seed={seed}")
+        else:
+            log_dir = os.path.join(TRAIN_OUTPUT_DIR, self.name, f"seed={seed}", f"run{time.time()}")
+
         self.logger = SummaryWriter(log_dir)
