@@ -1,10 +1,10 @@
+from typing import Any, Callable, Dict
+
 from abc import ABC, abstractmethod
 
 import os
 
 import time
-
-from itertools import chain
 
 from tqdm.notebook import trange, tqdm
 
@@ -13,12 +13,13 @@ from tensorboardX import SummaryWriter
 from numpy.random import seed as np_seed
 
 from torch import Tensor, from_numpy, no_grad
-from torch.nn import Module, CrossEntropyLoss, ReLU, Sequential, Linear, Identity
+from torch.nn import Module, CrossEntropyLoss
 from torch.optim import Optimizer
 from torch.random import manual_seed as torch_seed
 
 from awa import TRAIN_OUTPUT_DIR, RESULTS_DIR
 from awa.infra.env import Env
+from awa.infra.modeling import T5ForClassification
 
 
 __all__ = ["TrainingPipeline"]
@@ -29,6 +30,7 @@ class TrainingPipeline(ABC):
     BATCH_SIZE = 32
     EVAL_EXAMPLES = 1000
     TEST_EXAMPLES = 10000
+    N_CLASSES = 2
 
     @abstractmethod
     def get_optimizer(self, params) -> Optimizer:
@@ -37,19 +39,53 @@ class TrainingPipeline(ABC):
     def run(self, seed: int=42, leave_tqdm=True) -> None:
         num_steps = self.NUM_STEPS
         batch_size = self.BATCH_SIZE
+
+        np_seed(seed)
+        torch_seed(seed)
+
+        model = self.get_model()
+        optimizer = self.get_optimizer(model.parameters())
+        loss_fn = CrossEntropyLoss()
+        self.setup_logging(seed)
+
+        train_data, train_labels, val_data, val_labels, test_data, test_labels = self._get_data()
+
+        for i in trange(num_steps, desc="Training", leave=leave_tqdm):
+            batch_data = train_data[batch_size * i: batch_size * (i+1)]
+            batch_labels = train_labels[batch_size * i: batch_size * (i+1)]
+
+            model.train()
+            loss: Tensor = loss_fn(model(batch_data), batch_labels)
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            self.log({"loss": loss}, "train", i)
+            self.log(self.compute_metrics(model, val_data, val_labels, loss_fn), "eval", i)
+
+        self.log(self.compute_metrics(model, test_data, test_labels, loss_fn), "test", i+1)
+
+    def benchmark(self) -> None:
+        self.use_benchmark_logging = True
+
+        seeds = [41, 42, 43]
+        for seed in tqdm(seeds, desc="Benchmarking"):
+            self.run(seed=seed, leave_tqdm=False)
+
+    def _get_data(self):
+        """
+        Convenience function to get data
+        """
+        n_classes = self.N_CLASSES
+        num_steps = self.NUM_STEPS
+        batch_size = self.BATCH_SIZE
         train_examples = num_steps * batch_size
         eval_examples = self.EVAL_EXAMPLES
         test_examples = self.TEST_EXAMPLES
         total_examples = train_examples + eval_examples + test_examples
 
-        np_seed(seed)
-        torch_seed(seed)
-
-        env = Env(total_examples, 2)
-        model = self.get_model()
-        optimizer = self.get_optimizer(model.parameters())
-        loss_fn = CrossEntropyLoss()
-        self.setup_logging(seed)
+        env = Env(total_examples, n_classes)
 
         train_data = from_numpy(env.points[:train_examples])
         train_labels = from_numpy(env.labels[:train_examples])
@@ -62,56 +98,30 @@ class TrainingPipeline(ABC):
         assert val_data.size()[0] == eval_examples
         assert test_data.size()[0] == test_examples
 
-        for i in trange(num_steps, desc="Training", leave=leave_tqdm):
-            batch_data = train_data[batch_size * i: batch_size * (i+1)]
-            batch_labels = train_labels[batch_size * i: batch_size * (i+1)]
-
-            model.train()
-            batch_logits: Tensor = model(batch_data)
-
-            loss: Tensor = loss_fn(batch_logits, batch_labels)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            model.eval()
-            with no_grad():
-                eval_loss = loss_fn(model(val_data), val_labels)
-
-            self.logger.add_scalar("loss_train", loss, i)
-            self.logger.add_scalar("loss_eval", eval_loss, i)
-
-        model.eval()
-        with no_grad():
-            test_outputs: Tensor = model(test_data)
-            test_loss = loss_fn(test_outputs, test_labels)
-            test_accuracy = (test_outputs.argmax(dim=1) == test_labels).sum() / test_examples
-
-        self.logger.add_scalar("loss_test", test_loss, i+1)
-        self.logger.add_scalar("accuracy_test", test_accuracy, i+1)
-
-    def benchmark(self) -> None:
-        self.use_benchmark_logging = True
-
-        seeds = [41, 42, 43]
-        for seed in tqdm(seeds, desc="Benchmarking"):
-            self.run(seed=seed, leave_tqdm=False)
+        return train_data, train_labels, val_data, val_labels, test_data, test_labels
 
     def get_model(self) -> Module:
         input_dim = 2
-        output_dim = 2
-        hidden_dim = 1024
-        n_layers = 24
-        nonlinearity_class = ReLU
+        n_classes = self.N_CLASSES
+        return T5ForClassification(input_dim, n_classes)
 
-        in_dims = [input_dim] + [hidden_dim] * n_layers
-        out_dims = [hidden_dim] * n_layers + [output_dim]
-        activations = [nonlinearity_class] * n_layers + [Identity]
+    def compute_metrics(self, model: Module, data: Tensor, labels: Tensor, loss_fn: Callable) -> None:
+        model.eval()
+        with no_grad():
+            outputs: Tensor = model(data)
+            loss = loss_fn(outputs, labels)
+            accuracy = (outputs.argmax(dim=1) == labels).sum() / data.size()[0]
 
-        return Sequential(*chain.from_iterable(
-            (Linear(i, o), a()) for i, o, a in zip(in_dims, out_dims, activations)
-        ))
+        return {
+            "loss": loss,
+            "accuracy": accuracy,
+        }
+
+    def log(self, logs: Dict[str, Any], prefix: str, step: int) -> None:
+        for value_name, value in logs.items():
+            self.logger.add_scalar(f"{value_name}_{prefix}", value, step)
+
+        self.logger.flush()
 
     @property
     def name(self) -> str:
