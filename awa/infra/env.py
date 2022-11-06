@@ -3,6 +3,9 @@ from numpy.random import randint, rand
 from numpy.linalg import norm
 
 
+__all__ = ["Env"]
+
+
 class Env:
     """
     2D grid of x \in [-100, 100] ^ 2
@@ -17,35 +20,34 @@ class Env:
     This is a Voronoi diagram
 
     k ~ Uniform(100, 150)
-    C = 2
-
-    Each env has a dataset size of 100000 points, so D = R^{N x 2}, N = 100000
     """
     X_BOUNDS = [-100, 100]
     K_BOUNDS = [100, 150]
-    N = 100000
-    C = 2
 
-    def __init__(self) -> None:
-        # Pick k
+    def __init__(self, N: int, C: int) -> None:
+        self.N = N
+        self.C = C
+
         k_min, k_max = self.K_BOUNDS
+        x_min, x_max = self.X_BOUNDS
+
+        # Pick k
         k = randint(k_min, k_max + 1)
 
         # 1. Pick k points as our centers
-        x_min, x_max = self.X_BOUNDS
         x_loc, x_scale = (x_min + x_max) / 2, (x_max - x_min) / 2
         centers = (2 * rand(k, 2) - 1) * x_scale + x_loc
 
         # 2. Assign each center a label c
-        center_labels = randint(self.C, size=(k,))
+        center_labels = randint(C, size=(k,))
 
         # 3. Pick n points
-        points = (2 * rand(self.N, 2) - 1) * x_scale + x_loc
+        points = (2 * rand(N, 2) - 1) * x_scale + x_loc
 
         # 4. Assign the points a label c depending on which center is closer
         centers_rescaled = centers / (norm(centers, axis=1, keepdims=True) ** 2)
         dot_products = points @ centers_rescaled.T
-        assert dot_products.shape == (self.N, k)
+        assert dot_products.shape == (N, k)
         closest_to_1 = (dot_products - 1) ** 2
         closest_center_indices = closest_to_1.argmin(axis=1)
         labels: ndarray = center_labels[closest_center_indices]
