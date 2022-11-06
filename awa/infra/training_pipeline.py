@@ -17,7 +17,7 @@ from torch.nn import Module, CrossEntropyLoss, ReLU, Sequential, Linear, Identit
 from torch.optim import Optimizer
 from torch.random import seed as torch_seed
 
-from awa import TRAIN_OUPTUT_DIR
+from awa import TRAIN_OUTPUT_DIR, RESULTS_DIR
 from awa.infra.env import Env
 
 
@@ -34,7 +34,7 @@ class TrainingPipeline(ABC):
     def get_optimizer(self, params) -> Optimizer:
         pass
 
-    def run(self, seed: int=42, leave_tqdm=True) -> None:
+    def run(self, seed: int=42, leave_tqdm=True, base_log_dir=TRAIN_OUTPUT_DIR) -> None:
         num_steps = self.NUM_STEPS
         batch_size = self.BATCH_SIZE
         train_examples = num_steps * batch_size
@@ -49,7 +49,7 @@ class TrainingPipeline(ABC):
         model = self.get_model()
         optimizer = self.get_optimizer()
         loss_fn = CrossEntropyLoss()
-        self.setup_logging(seed)
+        self.setup_logging(base_log_dir, seed)
 
         train_data = env.points[:train_examples]
         train_labels = env.labels[:train_examples]
@@ -94,7 +94,7 @@ class TrainingPipeline(ABC):
     def benchmark(self) -> None:
         seeds = [41, 42, 43]
         for seed in seeds:
-            self.run(seed)
+            self.run(seed=seed, leave_tqdm=False, base_log_dir=RESULTS_DIR)
 
     def get_model(self) -> Module:
         input_dim = 2
@@ -115,6 +115,6 @@ class TrainingPipeline(ABC):
     def name(self) -> str:
         return self.__class__.__name__
 
-    def setup_logging(self, seed: int) -> None:
-        log_dir = os.path.join(TRAIN_OUPTUT_DIR, self.name, f"seed={seed}", f"run{time.time()}")
+    def setup_logging(self, base_log_dir: str, seed: int) -> None:
+        log_dir = os.path.join(base_log_dir, self.name, f"seed={seed}", f"run{time.time()}")
         self.logger = SummaryWriter(log_dir)
