@@ -6,6 +6,8 @@ import os
 
 import time
 
+from collections import Counter
+
 from tqdm.notebook import trange, tqdm
 
 from tensorboardX import SummaryWriter
@@ -100,6 +102,12 @@ class TrainingPipeline(ABC):
         test_data = from_numpy(env.points[train_examples + eval_examples: train_examples + eval_examples + test_examples])
         test_labels = from_numpy(env.labels[train_examples + eval_examples: train_examples + eval_examples + test_examples])
 
+        to_log = [("train", train_labels), ("val", val_labels), ("test", test_labels)]
+        for prefix, labels in to_log:
+            self.log({
+                "mle_accuracy": max(Counter(labels).values()) / labels.size()[0],
+            }, prefix)
+
         assert train_data.size()[0] == train_examples
         assert val_data.size()[0] == eval_examples
         assert test_data.size()[0] == test_examples
@@ -133,7 +141,7 @@ class TrainingPipeline(ABC):
             "accuracy": accuracy,
         }
 
-    def log(self, logs: Dict[str, Any], prefix: str, step: int) -> None:
+    def log(self, logs: Dict[str, Any], prefix: str="", step: int=0) -> None:
         for value_name, value in logs.items():
             self.logger.add_scalar(f"{value_name}_{prefix}", value, step)
 

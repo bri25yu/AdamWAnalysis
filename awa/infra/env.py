@@ -1,4 +1,4 @@
-from numpy import ndarray, float32
+from numpy import ndarray, float32, empty
 from numpy.random import randint, rand
 from numpy.linalg import norm
 
@@ -38,12 +38,14 @@ class Env:
         # 1. Pick k points as our centers
         x_loc, x_scale = (x_min + x_max) / 2, (x_max - x_min) / 2
         centers = (2 * rand(k, D) - 1) * x_scale + x_loc
+        centers = centers.astype(float32)
 
         # 2. Assign each center a label c
         center_labels = randint(C, size=(k,))
 
         # 3. Pick n points
         points = (2 * rand(N, D) - 1) * x_scale + x_loc
+        points = points.astype(float32)
 
         # 4. Assign the points a label c depending on which center is closer
         centers_rescaled = centers / (norm(centers, axis=1, keepdims=True) ** 2)
@@ -53,7 +55,7 @@ class Env:
         closest_center_indices = closest_to_1.argmin(axis=1)
         labels: ndarray = center_labels[closest_center_indices]
 
-        self.centers = centers.astype(float32)
+        self.centers = centers
         self.center_labels = center_labels
-        self.points = points.astype(float32)
+        self.points = points
         self.labels = labels
