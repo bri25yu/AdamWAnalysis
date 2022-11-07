@@ -1,3 +1,4 @@
+from awa.modeling.classes import *
 from awa.modeling.scores_and_classes import *
 from awa.modeling.centernorm_scores_classes import *
 from awa.modeling.num_centers import *

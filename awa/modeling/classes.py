@@ -1,19 +1,17 @@
-from torch import Tensor, from_numpy
+from torch import Tensor, from_numpy, softmax
 from torch.linalg import norm
 from torch.nn import Linear, Module, Parameter
-from torch.nn.functional import relu
 
 from awa.infra import Env
 
 
-__all__ = ["ScoresAndClassesModel"]
+__all__ = ["ClassesModel"]
 
 
-class ScoresAndClassesModel(Module):
+class ClassesModel(Module):
     """
     This model is required to learn:
-    1) Scores closer to 1 are better
-    2) Which class each center corresponds to
+    1) Which class each center corresponds to
 
     """
 
@@ -28,9 +26,6 @@ class ScoresAndClassesModel(Module):
         assert centers_normalized.size() == (self.num_centers, env.D)
         self.centers_normalized = Parameter(centers_normalized, requires_grad=False)
 
-        self.o = Linear(self.num_centers, self.num_centers)
-        self.score_map = Linear(self.num_centers, self.num_centers)
-
         self.classification_head = Linear(self.num_centers, env.C)
 
     def forward(self, inputs: Tensor) -> Tensor:
@@ -44,15 +39,13 @@ class ScoresAndClassesModel(Module):
 
         assert inputs.size() == (batch_size, env.D)
 
-        cross_attn_scores = inputs @ self.centers_normalized.T
-        assert cross_attn_scores.size() == (batch_size, num_centers)
+        dot_products = inputs @ self.centers_normalized.T
+        assert dot_products.size() == (batch_size, num_centers)
 
-        # 1) Scores closer to 1 are better
-        cross_attn_output = self.o(cross_attn_scores)  # (batch_size, num_centers)
-        cross_attn_output = relu(cross_attn_output)
-        cross_attn_output = self.score_map(cross_attn_output)  # (batch_size, num_centers)
+        closest_to_1 = (dot_products - 1) ** 2  # Target is 0, (batch_size, num_centers)
+        cross_attn = softmax(-closest_to_1, dim=1)  # (batch_size, num_centers)
 
-        # 2) Which class each center corresponds to
-        outputs = self.classification_head(cross_attn_output)  # (batch_size, n_classes)
+        # 1) Which class each center corresponds to
+        outputs = self.classification_head(cross_attn)  # (batch_size, n_classes)
 
         return outputs

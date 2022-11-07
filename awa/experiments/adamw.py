@@ -1,6 +1,11 @@
-from awa.infra import TrainingPipeline
+from typing import Union
+
+from torch.nn import Module
+
+from awa.infra import TrainingPipeline, Env
 from awa.optimizer_mixins import AdamWOptimizerMixin
 from awa.modeling import (
+    ClassesModel,
     ScoresAndClassesModel,
     CenterNormScoresClassesModel,
     NumCentersModel,
@@ -11,28 +16,37 @@ from awa.modeling import (
 
 
 class AdamWExperimentBase(AdamWOptimizerMixin, TrainingPipeline):
-    pass
+    MODEL_CLS: Union[None, type] = None
+
+    def get_model(self, env: Env) -> Module:
+        model_cls = self.MODEL_CLS
+
+        return model_cls(env)
 
 
-class ScoresAndClassesAdamWExperiment(ScoresAndClassesModel, AdamWExperimentBase):
-    pass
+class ClassesAdamWExperiment(AdamWExperimentBase):
+    MODEL_CLS = ClassesModel
 
 
-class CenterNormScoresClassesAdamWExperiment(CenterNormScoresClassesModel, AdamWExperimentBase):
-    pass
+class ScoresAndClassesAdamWExperiment(AdamWExperimentBase):
+    MODEL_CLS = ScoresAndClassesModel
 
 
-class NumCentersAdamWExperiment(NumCentersModel, AdamWExperimentBase):
-    pass
+class CenterNormScoresClassesAdamWExperiment(AdamWExperimentBase):
+    MODEL_CLS = CenterNormScoresClassesModel
 
 
-class EnvDimAndCentersAdamWExperiment(EnvDimAndCentersModel, AdamWExperimentBase):
-    pass
+class NumCentersAdamWExperiment(AdamWExperimentBase):
+    MODEL_CLS = NumCentersModel
 
 
-class EnvDimAndNoCenterNormAdamWExperiment(EnvDimAndNoCenterNormModel, AdamWExperimentBase):
-    pass
+class EnvDimAndCentersAdamWExperiment(AdamWExperimentBase):
+    MODEL_CLS = EnvDimAndCentersModel
 
 
-class CrossAttnAdamWExperiment(CrossAttnModel, AdamWExperimentBase):
-    pass
+class EnvDimAndNoCenterNormAdamWExperiment(AdamWExperimentBase):
+    MODEL_CLS = EnvDimAndNoCenterNormModel
+
+
+class CrossAttnAdamWExperiment(AdamWExperimentBase):
+    MODEL_CLS = CrossAttnModel
