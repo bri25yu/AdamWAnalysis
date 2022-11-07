@@ -20,8 +20,10 @@ class AdamWExperimentBase(AdamWOptimizerMixin, TrainingPipeline):
 
 
 class ExactAdamWExperiment(AdamWExperimentBase):
+    LR = 1e-100
     MODEL_CLS = ExactModel
 
 
 class CenterLabelsAdamWExperiment(AdamWExperimentBase):
+    LR = 1e-5
     MODEL_CLS = CenterLabelsModel
