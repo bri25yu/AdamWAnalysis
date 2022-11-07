@@ -21,7 +21,6 @@ from torch.random import manual_seed as torch_seed
 
 from awa import TRAIN_OUTPUT_DIR, RESULTS_DIR
 from awa.infra.env import Env
-from awa.infra.modeling import KMeansConfig, KMeansModel
 
 
 __all__ = ["TrainingPipeline"]
@@ -42,20 +41,24 @@ class TrainingPipeline(ABC):
     def get_optimizer(self, params) -> Optimizer:
         pass
 
+    @abstractmethod
+    def get_model(self, env: Env) -> Module:
+        pass
+
     def run(self, seed: int=42, leave_tqdm=True) -> None:
         num_steps = self.NUM_STEPS
         batch_size = self.BATCH_SIZE
 
         np_seed(seed)
         torch_seed(seed)
-
-        model = self.get_model()
-        optimizer = self.get_optimizer(model.parameters())
-        loss_fn = CrossEntropyLoss()
         self.setup_logging(seed)
 
+        env, train_data, train_labels, val_data, val_labels, test_data, test_labels = self._get_data()
+
+        model = self.get_model(env)
         model = model.to(TORCH_DEVICE)
-        train_data, train_labels, val_data, val_labels, test_data, test_labels = self._get_data()
+        optimizer = self.get_optimizer(model.parameters())
+        loss_fn = CrossEntropyLoss()
 
         for i in trange(num_steps, desc="Training", leave=leave_tqdm):
             batch_data = train_data[batch_size * i: batch_size * (i+1)].to(TORCH_DEVICE)
@@ -117,17 +120,7 @@ class TrainingPipeline(ABC):
         test_data = test_data.to(TORCH_DEVICE)
         test_labels = test_labels.to(TORCH_DEVICE)
 
-        return train_data, train_labels, val_data, val_labels, test_data, test_labels
-
-    def get_model(self) -> Module:
-        config = KMeansConfig(
-            input_dim=self.DIM,
-            num_classes=self.N_CLASSES,
-            hidden_dim=64,
-            n_heads=1024,
-            head_dim=64,
-        )
-        return KMeansModel(config)
+        return env, train_data, train_labels, val_data, val_labels, test_data, test_labels
 
     def compute_metrics(self, model: Module, data: Tensor, labels: Tensor, loss_fn: Callable) -> None:
         model.eval()
