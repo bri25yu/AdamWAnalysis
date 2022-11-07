@@ -5,6 +5,7 @@ from torch.nn import Module
 from awa.infra import TrainingPipeline, Env
 from awa.optimizer_mixins import AdamWOptimizerMixin
 from awa.modeling import (
+    ExactModel,
     ClassesModel,
     ScoresAndClassesModel,
     CenterNormScoresClassesModel,
@@ -22,6 +23,10 @@ class AdamWExperimentBase(AdamWOptimizerMixin, TrainingPipeline):
         model_cls = self.MODEL_CLS
 
         return model_cls(env)
+
+
+class ExactAdamWExperiment(AdamWExperimentBase):
+    MODEL_CLS = ExactModel
 
 
 class ClassesAdamWExperiment(AdamWExperimentBase):
