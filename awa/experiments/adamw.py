@@ -25,5 +25,5 @@ class ExactAdamWExperiment(AdamWExperimentBase):
 
 
 class CenterLabelsAdamWExperiment(AdamWExperimentBase):
-    LR = 1e-5
+    LR = 1e-2
     MODEL_CLS = CenterLabelsModel
