@@ -36,7 +36,7 @@ class CenterLabelsModel(Module):
         dot_products = inputs @ self.centers_normalized.T
         assert dot_products.size() == (batch_size, num_centers)
 
-        closest_to_1 = (dot_products - 1) ** 2  # Target is 0, (batch_size, num_centers)
+        closest_to_1 = (dot_products - 1).abs()  # Target is 0, (batch_size, num_centers)
         closest_to_1 = closest_to_1 - closest_to_1.min(dim=1, keepdim=True)[0]
         center_probs = softmax(-closest_to_1 * 10000, dim=1)  # (batch_size, num_centers)
 
