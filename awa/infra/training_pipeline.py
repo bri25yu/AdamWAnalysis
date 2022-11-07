@@ -6,8 +6,6 @@ import os
 
 import time
 
-from collections import Counter
-
 from tqdm.notebook import trange, tqdm
 
 from tensorboardX import SummaryWriter
@@ -108,7 +106,7 @@ class TrainingPipeline(ABC):
         to_log = [("train", train_labels), ("val", val_labels), ("test", test_labels)]
         for prefix, labels in to_log:
             self.log({
-                "mle_accuracy": max(Counter(labels).values()) / labels.size()[0],
+                "mle_accuracy": labels.unique(return_counts=True)[1].max() / labels.size()[0],
             }, prefix)
 
         assert train_data.size()[0] == train_examples
