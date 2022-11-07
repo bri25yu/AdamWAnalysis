@@ -6,6 +6,7 @@ from awa.infra import TrainingPipeline, Env
 from awa.optimizer_mixins import AdamWOptimizerMixin
 from awa.modeling import (
     ExactModel,
+    CenterLabelsModel,
 )
 
 
@@ -20,3 +21,7 @@ class AdamWExperimentBase(AdamWOptimizerMixin, TrainingPipeline):
 
 class ExactAdamWExperiment(AdamWExperimentBase):
     MODEL_CLS = ExactModel
+
+
+class CenterLabelsAdamWExperiment(AdamWExperimentBase):
+    MODEL_CLS = CenterLabelsModel
