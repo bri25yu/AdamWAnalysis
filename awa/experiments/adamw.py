@@ -7,6 +7,7 @@ from awa.optimizer_mixins import AdamWOptimizerMixin
 from awa.modeling import (
     ExactModel,
     CenterLabelsModel,
+    ClosestToOneModel,
 )
 
 
@@ -27,3 +28,8 @@ class ExactAdamWExperiment(AdamWExperimentBase):
 class CenterLabelsAdamWExperiment(AdamWExperimentBase):
     LR = 1e-2
     MODEL_CLS = CenterLabelsModel
+
+
+class ClosestToOneAdamWExperiment(AdamWExperimentBase):
+    LR = 1e-4
+    MODEL_CLS = ClosestToOneModel
