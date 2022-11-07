@@ -22,14 +22,17 @@ class AdamWExperimentBase(AdamWOptimizerMixin, TrainingPipeline):
 
 class ExactAdamWExperiment(AdamWExperimentBase):
     LR = 1e-100
+    WEIGHT_DECAY = 1e-2
     MODEL_CLS = ExactModel
 
 
 class CenterLabelsAdamWExperiment(AdamWExperimentBase):
     LR = 1e-2
+    WEIGHT_DECAY = 1e-2
     MODEL_CLS = CenterLabelsModel
 
 
 class LearnOffsetAdamWExperiment(AdamWExperimentBase):
-    LR = 1e-4
+    LR = 2e-3
+    WEIGHT_DECAY = 5e-2
     MODEL_CLS = LearnOffsetModel
