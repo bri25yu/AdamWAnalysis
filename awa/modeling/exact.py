@@ -42,6 +42,7 @@ class ExactModel(Module):
         classes = self.center_labels[closest_center_idxs]  # (batch_size,)
 
         logits = zeros((batch_size, self.env.C), device=classes.device)
-        logits[classes.unsqueeze(1)] = 1
+        logits.scatter_(1, classes.unsqueeze(1), 1)
+        logits.requires_grad_()
 
         return logits
