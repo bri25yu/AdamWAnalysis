@@ -8,7 +8,7 @@ __all__ = ["Env"]
 
 class Env:
     """
-    2D grid of x \in [-100, 100] ^ 2
+    Grid of x \in [-100, 100] ^ D
 
     We make a classification task using the following algorithm.
     Given hyperparameters k, c, and N,
@@ -24,9 +24,10 @@ class Env:
     X_BOUNDS = [-100, 100]
     K_BOUNDS = [100, 150]
 
-    def __init__(self, N: int, C: int) -> None:
+    def __init__(self, N: int, C: int, D: int) -> None:
         self.N = N
         self.C = C
+        self.D = D
 
         k_min, k_max = self.K_BOUNDS
         x_min, x_max = self.X_BOUNDS
@@ -36,13 +37,13 @@ class Env:
 
         # 1. Pick k points as our centers
         x_loc, x_scale = (x_min + x_max) / 2, (x_max - x_min) / 2
-        centers = (2 * rand(k, 2) - 1) * x_scale + x_loc
+        centers = (2 * rand(k, D) - 1) * x_scale + x_loc
 
         # 2. Assign each center a label c
         center_labels = randint(C, size=(k,))
 
         # 3. Pick n points
-        points = (2 * rand(N, 2) - 1) * x_scale + x_loc
+        points = (2 * rand(N, D) - 1) * x_scale + x_loc
 
         # 4. Assign the points a label c depending on which center is closer
         centers_rescaled = centers / (norm(centers, axis=1, keepdims=True) ** 2)

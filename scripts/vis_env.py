@@ -5,5 +5,5 @@ from awa.vis.env import plot_env
 
 
 seed(42)
-env = Env()
+env = Env(N=100000, C=2, D=2)
 plot_env(env)

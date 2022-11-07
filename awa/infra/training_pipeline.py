@@ -19,7 +19,7 @@ from torch.random import manual_seed as torch_seed
 
 from awa import TRAIN_OUTPUT_DIR, RESULTS_DIR
 from awa.infra.env import Env
-from awa.infra.modeling import T5ForClassification
+from awa.infra.modeling import KMeansConfig, KMeansModel
 
 
 __all__ = ["TrainingPipeline"]
@@ -31,6 +31,7 @@ class TrainingPipeline(ABC):
     EVAL_EXAMPLES = 1000
     TEST_EXAMPLES = 10000
     N_CLASSES = 2
+    DIM = 2
 
     @abstractmethod
     def get_optimizer(self, params) -> Optimizer:
@@ -78,6 +79,7 @@ class TrainingPipeline(ABC):
         Convenience function to get data
         """
         n_classes = self.N_CLASSES
+        dim = self.DIM
         num_steps = self.NUM_STEPS
         batch_size = self.BATCH_SIZE
         train_examples = num_steps * batch_size
@@ -85,7 +87,7 @@ class TrainingPipeline(ABC):
         test_examples = self.TEST_EXAMPLES
         total_examples = train_examples + eval_examples + test_examples
 
-        env = Env(total_examples, n_classes)
+        env = Env(total_examples, n_classes, dim)
 
         train_data = from_numpy(env.points[:train_examples])
         train_labels = from_numpy(env.labels[:train_examples])
@@ -101,9 +103,14 @@ class TrainingPipeline(ABC):
         return train_data, train_labels, val_data, val_labels, test_data, test_labels
 
     def get_model(self) -> Module:
-        input_dim = 2
-        n_classes = self.N_CLASSES
-        return T5ForClassification(input_dim, n_classes)
+        config = KMeansConfig(
+            input_dim=self.DIM,
+            num_classes=self.N_CLASSES,
+            hidden_dim=64,
+            n_heads=1024,
+            head_dim=64,
+        )
+        return KMeansModel(config)
 
     def compute_metrics(self, model: Module, data: Tensor, labels: Tensor, loss_fn: Callable) -> None:
         model.eval()
