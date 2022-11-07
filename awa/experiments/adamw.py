@@ -5,4 +5,4 @@ from awa.infra import TrainingPipeline
 
 class AdamWExperiment(TrainingPipeline):
     def get_optimizer(self, params) -> Optimizer:
-        return AdamW(params, lr=1e-5)
+        return AdamW(params, lr=1e-6)

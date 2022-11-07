@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from torch import Tensor, matmul
 from torch.nn import Linear, Module
-from torch.nn.functional import softmax, dropout
+from torch.nn.functional import softmax, dropout, relu
 
 
 __all__ = ["KMeansConfig", "KMeansModel"]
@@ -47,21 +47,23 @@ class KMeansModel(Module):
         batch_size = inputs.size()[0]
 
         inputs = self.input_transformation(inputs)  # (batch_size, hidden_dim)
+        inputs = relu(inputs)
 
         query_states = self.q(inputs)  # (batch_size, head_dim)
         key_states = self.k(inputs).view(batch_size, config.n_heads, config.head_dim)
         value_states = self.v(inputs).view(batch_size, config.n_heads, config.head_dim)
 
-        cross_attn_scores = matmul(query_states, key_states.transpose(1, 2))
+        cross_attn_scores = matmul(query_states.unsqueeze(1), key_states.transpose(1, 2)).squeeze(1)
         assert cross_attn_scores.size() == (batch_size, config.n_heads)
 
         cross_attn_weights = softmax(cross_attn_scores, dim=1)  # (batch_size, n_heads)
         cross_attn_weights = dropout(cross_attn_weights, p=config.dropout, training=self.training)
 
-        cross_attn_output = matmul(cross_attn_weights, value_states)
+        cross_attn_output = matmul(cross_attn_weights.unsqueeze(1), value_states).squeeze(1)
         assert cross_attn_output.size() == (batch_size, config.head_dim)
 
         cross_attn_output = self.o(cross_attn_output)  # (batch_size, hidden_dim)
+        cross_attn_output = relu(cross_attn_output)
 
         outputs = self.classification_head(cross_attn_output)  # (batch_size, n_classes)
 
