@@ -25,6 +25,9 @@ from awa.infra.modeling import KMeansConfig, KMeansModel
 __all__ = ["TrainingPipeline"]
 
 
+TORCH_DEVICE = "cuda"
+
+
 class TrainingPipeline(ABC):
     NUM_STEPS = 10000
     BATCH_SIZE = 32
@@ -49,11 +52,12 @@ class TrainingPipeline(ABC):
         loss_fn = CrossEntropyLoss()
         self.setup_logging(seed)
 
+        model = model.to(TORCH_DEVICE)
         train_data, train_labels, val_data, val_labels, test_data, test_labels = self._get_data()
 
         for i in trange(num_steps, desc="Training", leave=leave_tqdm):
-            batch_data = train_data[batch_size * i: batch_size * (i+1)]
-            batch_labels = train_labels[batch_size * i: batch_size * (i+1)]
+            batch_data = train_data[batch_size * i: batch_size * (i+1)].to(TORCH_DEVICE)
+            batch_labels = train_labels[batch_size * i: batch_size * (i+1)].to(TORCH_DEVICE)
 
             model.train()
             loss: Tensor = loss_fn(model(batch_data), batch_labels)
@@ -99,6 +103,11 @@ class TrainingPipeline(ABC):
         assert train_data.size()[0] == train_examples
         assert val_data.size()[0] == eval_examples
         assert test_data.size()[0] == test_examples
+
+        val_data = val_data.to(TORCH_DEVICE)
+        val_labels = val_labels.to(TORCH_DEVICE)
+        test_data = test_data.to(TORCH_DEVICE)
+        test_labels = test_labels.to(TORCH_DEVICE)
 
         return train_data, train_labels, val_data, val_labels, test_data, test_labels
 
