@@ -4,17 +4,20 @@ from torch.nn import Module, Parameter, Linear
 from awa.infra import Env
 
 
-__all__ = ["CenterNormModel"]
+__all__ = ["BatchOffsetScaleModel"]
 
 
-class CenterNormModel(Module):
+class BatchOffsetScaleModel(Module):
     def __init__(self, env: Env) -> None:
         super().__init__()
         self.env = env
 
         self.num_centers = env.centers.shape[0]
 
-        self.centers = Parameter(from_numpy(env.centers), requires_grad=False)
+        centers_normalized = from_numpy(env.centers)  # (num_centers, D)
+        centers_normalized = centers_normalized / (norm(centers_normalized, dim=1, keepdim=True) ** 2)
+        assert centers_normalized.size() == (self.num_centers, env.D)
+        self.centers_normalized = Parameter(centers_normalized, requires_grad=False)
 
         self.scale = Parameter(ones((1, self.num_centers)))
         self.offset = Parameter(rand((1, self.num_centers)))
@@ -32,7 +35,7 @@ class CenterNormModel(Module):
 
         assert inputs.size() == (batch_size, env.D)
 
-        dot_products = inputs @ self.centers.T
+        dot_products = inputs @ self.centers_normalized.T
         assert dot_products.size() == (batch_size, num_centers)
 
         closest_to_1 = -self.scale * (dot_products - self.offset).abs()  # Target is 0, (batch_size, num_centers)
