@@ -9,7 +9,6 @@ from awa.modeling import (
     CenterLabelsModel,
     LearnOffsetModel,
     OffsetScaleModel,
-    BatchOffsetScaleModel,
 )
 
 
@@ -44,9 +43,3 @@ class OffsetScaleAdamWExperiment(AdamWExperimentBase):
     LR = 1e-2
     WEIGHT_DECAY = 1e-2
     MODEL_CLS = OffsetScaleModel
-
-
-class BatchOffsetScaleAdamWExperiment(AdamWExperimentBase):
-    LR = 1e-3
-    WEIGHT_DECAY = 1e-2
-    MODEL_CLS = BatchOffsetScaleModel
