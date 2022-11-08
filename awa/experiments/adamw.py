@@ -9,6 +9,7 @@ from awa.modeling import (
     CenterLabelsModel,
     LearnOffsetModel,
     OffsetScaleModel,
+    DotProdTransformModel,
 )
 
 
@@ -40,6 +41,12 @@ class LearnOffsetAdamWExperiment(AdamWExperimentBase):
 
 
 class OffsetScaleAdamWExperiment(AdamWExperimentBase):
-    LR = 1e-3
+    LR = 1e-2
     WEIGHT_DECAY = 1e-2
     MODEL_CLS = OffsetScaleModel
+
+
+class DotProdTransformAdamWExperiment(AdamWExperimentBase):
+    LR = 1e-4
+    WEIGHT_DECAY = 1e-2
+    MODEL_CLS = DotProdTransformModel

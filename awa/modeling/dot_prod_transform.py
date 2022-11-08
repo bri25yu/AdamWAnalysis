@@ -1,13 +1,13 @@
-from torch import Tensor, from_numpy, softmax, norm, rand, ones
-from torch.nn import Module, Parameter, Linear
+from torch import Tensor, from_numpy, softmax, norm
+from torch.nn import Module, Parameter, Linear, Sequential, ReLU
 
 from awa.infra import Env
 
 
-__all__ = ["OffsetScaleModel"]
+__all__ = ["DotProdTransformModel"]
 
 
-class OffsetScaleModel(Module):
+class DotProdTransformModel(Module):
     def __init__(self, env: Env) -> None:
         super().__init__()
         self.env = env
@@ -19,8 +19,7 @@ class OffsetScaleModel(Module):
         assert centers_normalized.size() == (self.num_centers, env.D)
         self.centers_normalized = Parameter(centers_normalized, requires_grad=False)
 
-        self.scale = Parameter(ones((1,)))
-        self.offset = Parameter(rand((1,)))
+        self.center_logits = Sequential(Linear(env.D, env.D), ReLU(), Linear(env.D, env.D), ReLU())
 
         self.center_logits = Linear(self.num_centers, env.C, bias=False)
 
