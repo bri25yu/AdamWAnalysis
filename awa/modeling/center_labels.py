@@ -1,17 +1,17 @@
 from torch import Tensor, from_numpy, softmax
 from torch.linalg import norm
-from torch.nn import Module, Parameter, Linear
+from torch.nn import Parameter, Linear
 
 from awa.infra import Env
+from awa.modeling.base import ModelBase, ModelOutput
 
 
 __all__ = ["CenterLabelsModel"]
 
 
-class CenterLabelsModel(Module):
+class CenterLabelsModel(ModelBase):
     def __init__(self, env: Env) -> None:
-        super().__init__()
-        self.env = env
+        super().__init__(env)
 
         self.num_centers = env.centers.shape[0]
 
@@ -23,10 +23,6 @@ class CenterLabelsModel(Module):
         self.center_logits = Linear(self.num_centers, env.C, bias=False)
 
     def forward(self, inputs: Tensor) -> Tensor:
-        """
-        inputs is a tensor of shape (batch_size, D)
-        outputs is a tensor of shape (batch_size, C)
-        """
         batch_size = inputs.size()[0]
         env = self.env
         num_centers = self.num_centers
@@ -42,4 +38,4 @@ class CenterLabelsModel(Module):
 
         logits = self.center_logits(center_probs)  # (batch_size, C)
 
-        return logits
+        return ModelOutput(logits=logits, logs={"center_logits": self.center_logits.data})

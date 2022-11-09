@@ -1,16 +1,16 @@
 from torch import Tensor, from_numpy, softmax, norm, rand
-from torch.nn import Module, Parameter, Linear
+from torch.nn import Parameter, Linear
 
 from awa.infra import Env
+from awa.modeling.base import ModelBase, ModelOutput
 
 
 __all__ = ["LearnOffsetModel"]
 
 
-class LearnOffsetModel(Module):
+class LearnOffsetModel(ModelBase):
     def __init__(self, env: Env) -> None:
-        super().__init__()
-        self.env = env
+        super().__init__(env)
 
         self.num_centers = env.centers.shape[0]
 
@@ -42,4 +42,6 @@ class LearnOffsetModel(Module):
 
         logits = self.center_logits(center_probs)  # (batch_size, C)
 
-        return logits
+        return ModelOutput(
+            logits=logits, logs={"center_logits": self.center_logits.data, "offset": self.offset.data}
+        )

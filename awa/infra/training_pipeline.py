@@ -19,6 +19,7 @@ from torch.random import manual_seed as torch_seed
 
 from awa import TRAIN_OUTPUT_DIR, RESULTS_DIR
 from awa.infra.env import Env
+from awa.modeling.base import ModelOutput
 
 
 __all__ = ["TrainingPipeline"]
@@ -43,6 +44,10 @@ class TrainingPipeline(ABC):
     def get_model(self, env: Env) -> Module:
         pass
 
+    @abstractmethod
+    def visualize(self) -> None:
+        pass
+
     def run(self, seed: int=42, leave_tqdm=True) -> None:
         num_steps = self.NUM_STEPS
         batch_size = self.BATCH_SIZE
@@ -63,7 +68,8 @@ class TrainingPipeline(ABC):
             batch_labels = train_labels[batch_size * i: batch_size * (i+1)].to(TORCH_DEVICE)
 
             model.train()
-            loss: Tensor = loss_fn(model(batch_data), batch_labels)
+            output: ModelOutput = model(batch_data)
+            loss: Tensor = loss_fn(output.logits, batch_labels)
 
             optimizer.zero_grad()
             loss.backward()
@@ -77,9 +83,13 @@ class TrainingPipeline(ABC):
     def benchmark(self) -> None:
         self.use_benchmark_logging = True
 
-        seeds = [41, 42, 43]
+        # Work with one seed for now for visualization purposes
+        # seeds = [41, 42, 43]
+        seeds = [42]
         for seed in tqdm(seeds, desc="Benchmarking"):
             self.run(seed=seed, leave_tqdm=False)
+
+        self.visualize()
 
     def _get_data(self):
         """
@@ -123,14 +133,18 @@ class TrainingPipeline(ABC):
     def compute_metrics(self, model: Module, data: Tensor, labels: Tensor, loss_fn: Callable) -> None:
         model.eval()
         with no_grad():
-            outputs: Tensor = model(data)
-            loss = loss_fn(outputs, labels)
-            accuracy = (outputs.argmax(dim=1) == labels).sum() / data.size()[0]
+            output: ModelOutput = model(data)
+            loss = loss_fn(output.logits, labels)
+            accuracy = (output.logits.argmax(dim=1) == labels).sum() / data.size()[0]
 
-        return {
+        logs = {
             "loss": loss,
             "accuracy": accuracy,
         }
+        if output.logs is not None:
+            logs.update(output.logs)
+
+        return logs
 
     def log(self, logs: Dict[str, Any], prefix: str="", step: int=0) -> None:
         for value_name, value in logs.items():

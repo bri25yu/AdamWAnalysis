@@ -1,4 +1,4 @@
-from numpy import ndarray, float32, empty
+from numpy import ndarray, float32
 from numpy.random import randint, rand
 from numpy.linalg import norm
 
@@ -48,14 +48,43 @@ class Env:
         points = points.astype(float32)
 
         # 4. Assign the points a label c depending on which center is closer
-        centers_rescaled = centers / (norm(centers, axis=1, keepdims=True) ** 2)
-        dot_products = points @ centers_rescaled.T
-        assert dot_products.shape == (N, k)
-        closest_to_1 = (dot_products - 1) ** 2
-        closest_center_indices = closest_to_1.argmin(axis=1)
-        labels: ndarray = center_labels[closest_center_indices]
+        labels = self.assign_labels_to_points(points, centers, center_labels)
 
         self.centers = centers
         self.center_labels = center_labels
         self.points = points
         self.labels = labels
+
+    @staticmethod
+    def assign_labels_to_points(points: ndarray, centers: ndarray, center_labels: ndarray) -> ndarray:
+        """
+        Parameters
+        ----------
+        points: ndarray of shape (N, D)
+        centers: ndarray of shape (k, D)
+        center_labels: ndarray of shape (k,)
+
+        Returns
+        -------
+        point_labels: ndarray of shape (N,)
+
+        """
+        N = points.shape[0]
+        k = centers.shape[0]
+        D = points.shape[1]
+
+        assert points.shape == (N, D)
+        assert centers.shape == (k, D)
+        assert center_labels.shape == (k,)
+
+        centers_rescaled = centers / (norm(centers, axis=1, keepdims=True) ** 2)
+        dot_products = points @ centers_rescaled.T
+        assert dot_products.shape == (N, k)
+
+        closest_to_1 = (dot_products - 1) ** 2
+        closest_center_indices = closest_to_1.argmin(axis=1)
+
+        labels: ndarray = center_labels[closest_center_indices]
+        assert labels.shape == (N,)
+
+        return labels

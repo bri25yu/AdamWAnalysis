@@ -1,17 +1,17 @@
 from torch import Tensor, from_numpy, zeros
 from torch.linalg import norm
-from torch.nn import Module, Parameter
+from torch.nn import Parameter
 
 from awa.infra import Env
+from awa.modeling.base import ModelOutput, ModelBase
 
 
 __all__ = ["ExactModel"]
 
 
-class ExactModel(Module):
+class ExactModel(ModelBase):
     def __init__(self, env: Env) -> None:
-        super().__init__()
-        self.env = env
+        super().__init__(env)
 
         self.num_centers = env.centers.shape[0]
 
@@ -23,11 +23,7 @@ class ExactModel(Module):
         center_labels = from_numpy(env.center_labels)  # (num_centers,)
         self.center_labels = Parameter(center_labels, requires_grad=False)
 
-    def forward(self, inputs: Tensor) -> Tensor:
-        """
-        inputs is a tensor of shape (batch_size, D)
-        outputs is a tensor of shape (batch_size, C)
-        """
+    def forward(self, inputs: Tensor) -> ModelOutput:
         batch_size = inputs.size()[0]
         env = self.env
         num_centers = self.num_centers
@@ -45,4 +41,4 @@ class ExactModel(Module):
         logits.scatter_(1, classes.unsqueeze(1), 1)
         logits.requires_grad_()
 
-        return logits
+        return ModelOutput(logits=logits)
