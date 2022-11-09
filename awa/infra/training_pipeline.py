@@ -8,6 +8,9 @@ import time
 
 from tqdm.notebook import trange, tqdm
 
+from matplotlib.pyplot import subplots
+from seaborn import scatterplot
+
 from tensorboardX import SummaryWriter
 
 from numpy.random import seed as np_seed
@@ -45,7 +48,7 @@ class TrainingPipeline(ABC):
         pass
 
     @abstractmethod
-    def visualize(self) -> None:
+    def visualize_single_step(self) -> None:
         pass
 
     def run(self, seed: int=42, leave_tqdm=True) -> None:
@@ -76,7 +79,7 @@ class TrainingPipeline(ABC):
             optimizer.step()
 
             self.log({"loss": loss}, "train", i)
-            self.log(self.compute_metrics(model, val_data, val_labels, loss_fn), "eval", i)
+            self.log(self.compute_metrics(model, val_data, val_labels, loss_fn, i), "eval", i)
 
         self.log(self.compute_metrics(model, test_data, test_labels, loss_fn), "test", i+1)
 
@@ -130,12 +133,25 @@ class TrainingPipeline(ABC):
 
         return env, train_data, train_labels, val_data, val_labels, test_data, test_labels
 
-    def compute_metrics(self, model: Module, data: Tensor, labels: Tensor, loss_fn: Callable) -> None:
+    def compute_metrics(self, model: Module, data: Tensor, labels: Tensor, loss_fn: Callable, step: int=None) -> None:
         model.eval()
         with no_grad():
             output: ModelOutput = model(data)
             loss = loss_fn(output.logits, labels)
-            accuracy = (output.logits.argmax(dim=1) == labels).sum() / data.size()[0]
+            predicted_labels = output.logits.argmax(dim=1)
+            accuracy = (predicted_labels == labels).sum() / data.size()[0]
+
+        if self.use_benchmark_logging:
+            if self.figax is None:
+                self.figax = subplots(1, 1, figsize=(10, 8))
+
+            fig, ax = self.figax
+
+            data_np = data.numpy()
+            xs, ys = data_np[:, 0], data_np[:, 1]
+            scatterplot(x=xs, y=ys, hue=predicted_labels, ax=ax, s=10, linewidth=0)
+
+            self.logger.add_figure("eval_predictions", fig, step)
 
         logs = {
             "loss": loss,
@@ -157,7 +173,10 @@ class TrainingPipeline(ABC):
         return self.__class__.__name__
 
     def setup_logging(self, seed: int) -> None:
-        if getattr(self, "use_benchmark_logging", False):
+        if not hasattr(self, "use_benchmark_logging"):
+            self.use_benchmark_logging = False
+
+        if self.use_benchmark_logging:
             log_dir = os.path.join(RESULTS_DIR, self.name, f"seed={seed}")
         else:
             log_dir = os.path.join(TRAIN_OUTPUT_DIR, self.name, f"seed={seed}", f"run{time.time()}")

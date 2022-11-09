@@ -43,5 +43,5 @@ class LearnOffsetModel(ModelBase):
         logits = self.center_logits(center_probs)  # (batch_size, C)
 
         return ModelOutput(
-            logits=logits, logs={"center_logits": self.center_logits.data, "offset": self.offset.data}
+            logits=logits, logs={"offset": self.offset.data}
         )

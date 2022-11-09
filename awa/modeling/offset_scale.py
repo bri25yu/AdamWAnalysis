@@ -25,10 +25,6 @@ class OffsetScaleModel(ModelBase):
         self.center_logits = Linear(self.num_centers, env.C, bias=False)
 
     def forward(self, inputs: Tensor) -> Tensor:
-        """
-        inputs is a tensor of shape (batch_size, D)
-        outputs is a tensor of shape (batch_size, C)
-        """
         batch_size = inputs.size()[0]
         env = self.env
         num_centers = self.num_centers
@@ -46,7 +42,6 @@ class OffsetScaleModel(ModelBase):
         return ModelOutput(
             logits=logits,
             logs={
-                "center_logits": self.center_logits.data,
                 "offset": self.offset.data,
                 "scale": self.scale.data,
             }

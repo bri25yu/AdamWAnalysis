@@ -38,4 +38,4 @@ class CenterLabelsModel(ModelBase):
 
         logits = self.center_logits(center_probs)  # (batch_size, C)
 
-        return ModelOutput(logits=logits, logs={"center_logits": self.center_logits.data})
+        return ModelOutput(logits=logits)
