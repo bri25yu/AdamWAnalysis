@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Tuple, Union
 
 from abc import ABC, abstractmethod
 
@@ -8,11 +8,12 @@ import time
 
 from tqdm.notebook import trange, tqdm
 
-from matplotlib.pyplot import subplots
-from seaborn import scatterplot
+from matplotlib.pyplot import figure, scatter, close, text, gca
+from matplotlib.animation import ArtistAnimation, PillowWriter
 
 from tensorboardX import SummaryWriter
 
+from numpy import unique
 from numpy.random import seed as np_seed
 
 from torch import Tensor, from_numpy, no_grad
@@ -22,7 +23,7 @@ from torch.random import manual_seed as torch_seed
 
 from awa import TRAIN_OUTPUT_DIR, RESULTS_DIR
 from awa.infra.env import Env
-from awa.modeling.base import ModelOutput
+from awa.modeling.base import ModelOutput, ModelBase
 
 
 __all__ = ["TrainingPipeline"]
@@ -34,7 +35,7 @@ TORCH_DEVICE = "cuda"
 class TrainingPipeline(ABC):
     NUM_STEPS = 10000
     BATCH_SIZE = 32
-    EVAL_EXAMPLES = 1000
+    EVAL_EXAMPLES = 10000
     TEST_EXAMPLES = 10000
     N_CLASSES = 2
     DIM = 2
@@ -44,11 +45,7 @@ class TrainingPipeline(ABC):
         pass
 
     @abstractmethod
-    def get_model(self, env: Env) -> Module:
-        pass
-
-    @abstractmethod
-    def visualize_single_step(self) -> None:
+    def get_model(self, env: Env) -> ModelBase:
         pass
 
     def run(self, seed: int=42, leave_tqdm=True) -> None:
@@ -79,9 +76,56 @@ class TrainingPipeline(ABC):
             optimizer.step()
 
             self.log({"loss": loss}, "train", i)
-            self.log(self.compute_metrics(model, val_data, val_labels, loss_fn, i), "eval", i)
+
+            if self.use_benchmark_logging:
+                eval_logs, eval_preds = self.compute_metrics(model, val_data, val_labels, loss_fn, return_preds=True)
+                self.eval_predictions_over_time.append(eval_preds.detach().cpu().numpy())
+            else:
+                eval_logs = self.compute_metrics(model, val_data, val_labels, loss_fn)
+            self.log(eval_logs, "eval", i)
 
         self.log(self.compute_metrics(model, test_data, test_labels, loss_fn), "test", i+1)
+        if self.use_benchmark_logging:
+            self.visualize(val_data, val_labels)
+
+    def visualize(self, data: Tensor, labels: Tensor) -> None:
+        data = data.detach().cpu().numpy()
+        labels = labels.detach().cpu().numpy()
+
+        fig = figure(figsize=(10, 8))
+
+        xs, ys = data[:, 0], data[:, 1]
+
+        artists = []
+        for step in trange(0, len(self.eval_predictions_over_time), 10, leave=False, desc="Visualizing"):
+            preds = self.eval_predictions_over_time[step]
+
+            artists_current_step = []
+            for group in unique(preds):
+                mask = preds == group
+                artists_current_step.append(scatter(xs[mask], ys[mask], label=group, color=f"C{group}"))
+
+            accuracy = (preds == labels).sum() * 100 / len(labels)
+            step_text = text(
+                x=.5, y=1.05,
+                s=f"Train step: {step} / {len(self.eval_predictions_over_time)} | Accuracy: {accuracy:.2f}%",
+                va="center", ha="center",
+                transform=gca().transAxes,
+            )
+            artists_current_step.append(step_text)
+
+            artists.append(artists_current_step)
+
+        with tqdm(total=len(artists), desc="Drawing and saving", leave=False) as pbar:
+            update_pbar = lambda current_step, total_steps: pbar.update(1)
+
+            animation = ArtistAnimation(fig, artists, interval=1, blit=True)
+
+            writer = PillowWriter(fps=60)
+            output_path = os.path.join(RESULTS_DIR, self.name, "output.png")
+            animation.save(output_path, writer=writer, progress_callback=update_pbar)
+
+        close()
 
     def benchmark(self) -> None:
         self.use_benchmark_logging = True
@@ -91,8 +135,6 @@ class TrainingPipeline(ABC):
         seeds = [42]
         for seed in tqdm(seeds, desc="Benchmarking"):
             self.run(seed=seed, leave_tqdm=False)
-
-        self.visualize()
 
     def _get_data(self):
         """
@@ -133,25 +175,15 @@ class TrainingPipeline(ABC):
 
         return env, train_data, train_labels, val_data, val_labels, test_data, test_labels
 
-    def compute_metrics(self, model: Module, data: Tensor, labels: Tensor, loss_fn: Callable, step: int=None) -> None:
+    def compute_metrics(
+        self, model: Module, data: Tensor, labels: Tensor, loss_fn: Callable, return_preds=False
+    ) -> Union[Dict[str, Tensor], Tuple[Dict[str, Tensor], Tensor]]:
         model.eval()
         with no_grad():
             output: ModelOutput = model(data)
             loss = loss_fn(output.logits, labels)
             predicted_labels = output.logits.argmax(dim=1)
             accuracy = (predicted_labels == labels).sum() / data.size()[0]
-
-        if self.use_benchmark_logging:
-            if self.figax is None:
-                self.figax = subplots(1, 1, figsize=(10, 8))
-
-            fig, ax = self.figax
-
-            data_np = data.numpy()
-            xs, ys = data_np[:, 0], data_np[:, 1]
-            scatterplot(x=xs, y=ys, hue=predicted_labels, ax=ax, s=10, linewidth=0)
-
-            self.logger.add_figure("eval_predictions", fig, step)
 
         logs = {
             "loss": loss,
@@ -160,7 +192,10 @@ class TrainingPipeline(ABC):
         if output.logs is not None:
             logs.update(output.logs)
 
-        return logs
+        if return_preds:
+            return logs, predicted_labels
+        else:
+            return logs
 
     def log(self, logs: Dict[str, Any], prefix: str="", step: int=0) -> None:
         for value_name, value in logs.items():
@@ -178,6 +213,7 @@ class TrainingPipeline(ABC):
 
         if self.use_benchmark_logging:
             log_dir = os.path.join(RESULTS_DIR, self.name, f"seed={seed}")
+            self.eval_predictions_over_time = []
         else:
             log_dir = os.path.join(TRAIN_OUTPUT_DIR, self.name, f"seed={seed}", f"run{time.time()}")
 
