@@ -10,6 +10,9 @@ from awa.infra import Env
 from awa.vis.tensorboard_utils import get_property_and_steps
 
 
+__all__ = ["CenterLabelsVisMixin"]
+
+
 class CenterLabelsVisMixin:
     def visualize(self, env: Env) -> None:
         logdir = os.path.join(RESULTS_DIR, self.name)

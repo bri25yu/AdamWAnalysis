@@ -10,6 +10,9 @@ from awa.modeling import (
     LearnOffsetModel,
     OffsetScaleModel,
 )
+from awa.vis import (
+    CenterLabelsVisMixin,
+)
 
 
 class AdamWExperimentBase(AdamWOptimizerMixin, TrainingPipeline):
@@ -27,7 +30,7 @@ class ExactAdamWExperiment(AdamWExperimentBase):
     MODEL_CLS = ExactModel
 
 
-class CenterLabelsAdamWExperiment(AdamWExperimentBase):
+class CenterLabelsAdamWExperiment(CenterLabelsVisMixin, AdamWExperimentBase):
     LR = 1e-2
     WEIGHT_DECAY = 1e-2
     MODEL_CLS = CenterLabelsModel
