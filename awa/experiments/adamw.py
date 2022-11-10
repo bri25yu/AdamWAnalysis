@@ -9,6 +9,7 @@ from awa.modeling import (
     CenterLabelsModel,
     LearnOffsetModel,
     OffsetScaleModel,
+    CrossAttnModel,
 )
 
 
@@ -43,3 +44,9 @@ class OffsetScaleAdamWExperiment(AdamWExperimentBase):
     LR = 1e-2
     WEIGHT_DECAY = 1e-2
     MODEL_CLS = OffsetScaleModel
+
+
+class CrossAttnAdamWExperiment(AdamWExperimentBase):
+    LR = 1e-3
+    WEIGHT_DECAY = 1e-2
+    MODEL_CLS = CrossAttnModel

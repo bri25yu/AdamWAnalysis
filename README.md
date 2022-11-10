@@ -1,5 +1,11 @@
 # AdamWAnalysis
 
+### Example of an env
+![](vis_output/env.png)
+
+<div style="page-break-after: always;"></div>
+
+
 ### Exact algorithm
 ![](results/ExactAdamWExperiment/benchmark.gif)
 
@@ -12,13 +18,13 @@
 <div style="page-break-after: always;"></div>
 
 
-### And learning that values closer to 1 are better
+### ...And learning that values closer to 1 are better
 ![](results/LearnOffsetAdamWExperiment/benchmark.gif)
 
 <div style="page-break-after: always;"></div>
 
 
-### And learning that larger scales leads to better softmax outputs
+### ...And learning that larger scales leads to better softmax outputs
 ![](results/OffsetScaleAdamWExperiment/benchmark.gif)
 
 <div style="page-break-after: always;"></div>
