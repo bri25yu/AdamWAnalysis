@@ -84,7 +84,7 @@ class TrainingPipeline(ABC):
                 self.eval_predictions_over_time.append(to_numpy(eval_preds))
                 self.logs_to_plot_over_time.append({k: to_numpy(v) for k, v in {
                     "Eval loss": eval_logs["loss"],
-                    **output.logs,
+                    **(output.logs if output.logs else {}),
                 }.items()})
             else:
                 eval_logs = self.compute_metrics(model, val_data, val_labels, loss_fn)
@@ -108,7 +108,8 @@ class TrainingPipeline(ABC):
         axs = axs.ravel()
         env_ax, axs = axs[0], axs[1:]
         if (n_total_plots % 2):
-            fig.delaxes(axs.pop(-1))
+            fig.delaxes(axs[-1])
+            axs = axs[:-1]
 
         # Set the axes labels
         for ax, value_name in zip(axs, logs):
@@ -157,7 +158,7 @@ class TrainingPipeline(ABC):
             animation = ArtistAnimation(fig, artists, interval=1, blit=True)
 
             writer = PillowWriter(fps=5)
-            output_path = os.path.join(RESULTS_DIR, self.name, "output.png")
+            output_path = os.path.join(RESULTS_DIR, self.name, "benchmark.gif")
             animation.save(output_path, writer=writer, progress_callback=update_pbar)
 
         close()
