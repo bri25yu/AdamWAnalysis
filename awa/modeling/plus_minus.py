@@ -1,4 +1,4 @@
-from torch import Tensor, from_numpy, softmax, norm, rand, ones, relu
+from torch import Tensor, from_numpy, softmax, norm, rand, ones, relu, randn
 from torch.nn import Parameter, Linear
 
 from awa.infra import Env
@@ -19,7 +19,9 @@ class PlusMinusModel(ModelBase):
         assert centers_normalized.size() == (self.num_centers, env.D)
         self.centers_normalized = Parameter(centers_normalized, requires_grad=False)
 
-        self.plus_minus = Linear(1, 2, bias=False)
+        # We manually initialize plus minus to have positive and negative values
+        # We multiply by 0.4 to be farther away from 0, but not as strong as 1
+        self.plus_minus = Parameter(0.4 * Tensor([-1.0, 1.0]).reshape((1, 2)))
 
         self.scale = Parameter(ones((1,)))
         self.offset = Parameter(rand((1,)))
@@ -38,7 +40,7 @@ class PlusMinusModel(ModelBase):
 
         dot_products = dot_products - self.offset
         dot_products = dot_products.unsqueeze(2)  # (batch_size, num_centers, 1)
-        dot_products = self.plus_minus(dot_products)  # (batch_size, num_centers, 2)
+        dot_products = dot_products @ self.plus_minus  # (batch_size, num_centers, 2)
         dot_products = relu(dot_products).sum(dim=2)  # (batch_size, num_centers)
 
         center_probs = softmax(-self.scale * dot_products, dim=1)  # (batch_size, num_centers)
@@ -50,5 +52,7 @@ class PlusMinusModel(ModelBase):
             logs={
                 "Offset": self.offset.data,
                 "Scale": self.scale.data,
+                "Plus minus 0": self.plus_minus.data[0, 0],
+                "Plus minus 1": self.plus_minus.data[0, 1],
             }
         )

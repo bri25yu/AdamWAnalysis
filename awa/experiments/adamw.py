@@ -47,6 +47,6 @@ class AbsUsingReLUAdamWExperiment(AdamWExperimentBase):
 
 
 class PlusMinusAdamWExperiment(AdamWExperimentBase):
-    LR = 1e-3
+    LR = 5e-3
     WEIGHT_DECAY = 1e-2
     MODEL_CLS = PlusMinusModel
