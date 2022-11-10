@@ -50,3 +50,9 @@ class PlusMinusAdamWExperiment(AdamWExperimentBase):
     LR = 5e-3
     WEIGHT_DECAY = 1e-2
     MODEL_CLS = PlusMinusModel
+
+
+class ComplexPlusMinusAdamWExperiment(AdamWExperimentBase):
+    LR = 5e-3
+    WEIGHT_DECAY = 1e-2
+    MODEL_CLS = ComplexPlusMinusModel
