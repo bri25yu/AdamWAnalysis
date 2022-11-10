@@ -28,3 +28,9 @@
 ![](results/OffsetScaleAdamWExperiment/benchmark.gif)
 
 <div style="page-break-after: always;"></div>
+
+
+### ...And learning to use ReLU instead of absolute value
+![](results/PlusMinusAdamWExperiment/benchmark.gif)
+
+<div style="page-break-after: always;"></div>
