@@ -1,14 +1,14 @@
-from torch import Tensor, from_numpy, softmax, norm, rand, ones
-from torch.nn import Parameter, Linear, Sequential, ReLU
+from torch import Tensor, from_numpy, softmax, norm, rand, ones, relu, stack
+from torch.nn import Parameter, Linear
 
 from awa.infra import Env
 from awa.modeling.base import ModelBase, ModelOutput
 
 
-__all__ = ["AbsModel"]
+__all__ = ["AbsUsingReLUModel"]
 
 
-class AbsModel(ModelBase):
+class AbsUsingReLUModel(ModelBase):
     def __init__(self, env: Env) -> None:
         super().__init__(env)
 
@@ -18,12 +18,6 @@ class AbsModel(ModelBase):
         centers_normalized = centers_normalized / (norm(centers_normalized, dim=1, keepdim=True) ** 2)
         assert centers_normalized.size() == (self.num_centers, env.D)
         self.centers_normalized = Parameter(centers_normalized, requires_grad=False)
-
-        self.abs_network = Sequential(
-            Linear(self.num_centers, self.num_centers, bias=False),
-            ReLU(),
-            Linear(self.num_centers, self.num_centers, bias=False),
-        )
 
         self.scale = Parameter(ones((1,)))
         self.offset = Parameter(rand((1,)))
@@ -40,8 +34,14 @@ class AbsModel(ModelBase):
         dot_products = inputs @ self.centers_normalized.T
         assert dot_products.size() == (batch_size, num_centers)
 
-        center_scores = -self.scale * self.abs_network(dot_products - self.offset)
-        center_probs = softmax(center_scores, dim=1)  # (batch_size, num_centers)
+        dot_products = dot_products - self.offset
+
+        dot_products_cat = stack((dot_products, -dot_products), dim=-1)
+        assert dot_products_cat.size() == (batch_size, num_centers, 2)
+
+        dot_products = relu(dot_products_cat).sum(dim=2)  # (batch_size, num_centers)
+
+        center_probs = softmax(-self.scale * dot_products, dim=1)  # (batch_size, num_centers)
 
         logits = self.center_logits(center_probs)  # (batch_size, C)
 
