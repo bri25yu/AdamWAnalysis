@@ -4,13 +4,7 @@ from torch.nn import Module
 
 from awa.infra import TrainingPipeline, Env
 from awa.optimizer_mixins import AdamWOptimizerMixin
-from awa.modeling import (
-    ExactModel,
-    CenterLabelsModel,
-    LearnOffsetModel,
-    OffsetScaleModel,
-    AbsUsingReLUModel,
-)
+from awa.modeling import *
 
 
 class AdamWExperimentBase(AdamWOptimizerMixin, TrainingPipeline):
@@ -50,3 +44,9 @@ class AbsUsingReLUAdamWExperiment(AdamWExperimentBase):
     LR = 1e-2
     WEIGHT_DECAY = 1e-2
     MODEL_CLS = AbsUsingReLUModel
+
+
+class PlusMinusAdamWExperiment(AdamWExperimentBase):
+    LR = 1e-3
+    WEIGHT_DECAY = 1e-2
+    MODEL_CLS = PlusMinusModel
