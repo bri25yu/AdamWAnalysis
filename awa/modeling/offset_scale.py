@@ -42,7 +42,7 @@ class OffsetScaleModel(ModelBase):
         return ModelOutput(
             logits=logits,
             logs={
-                "offset": self.offset.data,
-                "scale": self.scale.data,
+                "Offset": self.offset.data,
+                "Scale": self.scale.data,
             }
         )
