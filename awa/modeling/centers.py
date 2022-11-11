@@ -12,9 +12,10 @@ class CentersModel(ModelBase):
     def __init__(self, env: Env) -> None:
         super().__init__(env)
 
-        self.num_centers = env.centers.shape[0]
+        self.num_centers = 2048
 
-        self.centers = Parameter(100 * randn((self.num_centers, 2)), requires_grad=False)
+        # We manually initialize centers to be on the scale of [-100, 100]
+        self.centers = Parameter(100 * randn((self.num_centers, 2)))
 
         # We manually initialize plus minus to have positive and negative values
         # We multiply by 0.4 to be farther away from 0, but not as strong as 1
@@ -38,14 +39,13 @@ class CentersModel(ModelBase):
         dot_products = inputs @ centers.T
         assert dot_products.size() == (batch_size, num_centers)
 
-        dot_products = dot_products - self.offset
-
         # Learned abs
-        dot_products = dot_products.unsqueeze(2)  # (batch_size, num_centers, 1)
-        dot_products = dot_products @ self.plus_minus  # (batch_size, num_centers, 2)
-        dot_products = relu(dot_products).sum(dim=2)  # (batch_size, num_centers)
+        center_scores = dot_products - self.offset
+        center_scores = center_scores.unsqueeze(2)  # (batch_size, num_centers, 1)
+        center_scores = center_scores @ self.plus_minus  # (batch_size, num_centers, 2)
+        center_scores = relu(center_scores).sum(dim=2)  # (batch_size, num_centers)
 
-        center_probs = softmax(-self.scale * dot_products, dim=1)  # (batch_size, num_centers)
+        center_probs = softmax(-self.scale * center_scores, dim=1)  # (batch_size, num_centers)
 
         logits = self.center_logits(center_probs)  # (batch_size, C)
 
@@ -56,5 +56,8 @@ class CentersModel(ModelBase):
                 "Scale": self.scale.data,
                 "Plus minus 0": self.plus_minus.data[0, 0],
                 "Plus minus 1": self.plus_minus.data[0, 1],
+                "value_dot_products_abs_max": dot_products.abs().max(),
+                "value_dot_products_abs_min": dot_products.abs().min(),
+                "value_dot_products_abs_mean": dot_products.abs().mean(),
             }
         )

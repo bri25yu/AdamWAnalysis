@@ -53,6 +53,6 @@ class PlusMinusAdamWExperiment(AdamWExperimentBase):
 
 
 class CentersAdamWExperiment(AdamWExperimentBase):
-    LR = 5e-3
+    LR = 1e-2
     WEIGHT_DECAY = 1e-2
     MODEL_CLS = CentersModel
