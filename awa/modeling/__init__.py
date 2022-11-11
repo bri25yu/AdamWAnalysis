@@ -5,4 +5,3 @@ from awa.modeling.offset_scale import *
 from awa.modeling.abs_using_relu import *
 from awa.modeling.plus_minus import *
 from awa.modeling.centers import *
-from awa.modeling.center_simpler import *
