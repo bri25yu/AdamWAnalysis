@@ -34,3 +34,9 @@
 ![](results/PlusMinusAdamWExperiment/benchmark.gif)
 
 <div style="page-break-after: always;"></div>
+
+
+### ...And learning the centers from scratch
+![](results/CentersAdamWExperiment/benchmark.gif)
+
+<div style="page-break-after: always;"></div>
