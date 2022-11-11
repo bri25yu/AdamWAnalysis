@@ -56,8 +56,5 @@ class CentersModel(ModelBase):
                 "Scale": self.scale.data,
                 "Plus minus 0": self.plus_minus.data[0, 0],
                 "Plus minus 1": self.plus_minus.data[0, 1],
-                "value_dot_products_abs_max": dot_products.abs().max(),
-                "value_dot_products_abs_min": dot_products.abs().min(),
-                "value_dot_products_abs_mean": dot_products.abs().mean(),
             }
         )
