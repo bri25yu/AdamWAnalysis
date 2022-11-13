@@ -12,10 +12,10 @@ class TestModel(ModelBase):
     def __init__(self, env: Env) -> None:
         super().__init__(env)
 
-        self.num_centers = 2048
+        num_centers = 2048
 
-        self.centers = Parameter(randn((self.num_centers, env.D)))
-        self.centers_dense = Linear(env.D, env.D, bias=False)
+        # We manually initialize centers to be on the scale of [-100, 100]
+        self.centers = Parameter(100 * randn((num_centers, 2)))
 
         # We manually initialize plus minus to have positive and negative values
         # We multiply by 0.4 to be farther away from 0, but not as strong as 1
@@ -24,20 +24,14 @@ class TestModel(ModelBase):
         self.scale = Parameter(ones((1,)))
         self.offset = Parameter(rand((1,)))
 
-        self.center_logits = Linear(self.num_centers, env.C, bias=False)
+        self.center_logits = Linear(num_centers, env.C, bias=False)
 
     def forward(self, inputs: Tensor) -> Tensor:
-        batch_size = inputs.size()[0]
-        env = self.env
-        num_centers = self.num_centers
         centers = self.centers
 
-        assert inputs.size() == (batch_size, env.D)
-
-        centers = self.centers_dense(centers)
+        centers = centers / norm(centers, dim=1, keepdim=True).pow(2)
 
         dot_products = inputs @ centers.T
-        assert dot_products.size() == (batch_size, num_centers)
 
         # Learned abs
         center_scores = dot_products - self.offset
