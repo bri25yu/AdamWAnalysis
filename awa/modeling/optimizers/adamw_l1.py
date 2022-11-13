@@ -42,7 +42,8 @@ def adamw_l1(
         # Original code:
         # Perform stepweight decay
         # param.mul_(1 - lr * weight_decay)
-        param.sub_(lr * weight_decay)
+
+        param.add_(param.sign() * (-lr * weight_decay))
 
         ###############################
         # END L1 over L2 weight decay
