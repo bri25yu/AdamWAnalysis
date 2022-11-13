@@ -11,7 +11,8 @@ __all__ = ["CustomAdamWBase"]
 
 
 class CustomAdamWBase(Optimizer):
-    ADAMW_FUNCTION: Union[None, Callable] = None
+    def get_adamw_function(self) -> Callable:
+        raise NotImplementedError
 
     def __init__(
         self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8, weight_decay=1e-2
@@ -40,7 +41,7 @@ class CustomAdamWBase(Optimizer):
 
     @torch.no_grad()
     def step(self, closure=None):
-        adamw_function = self.ADAMW_FUNCTION
+        adamw_function = self.get_adamw_function()
 
         self._cuda_graph_capture_health_check()
 

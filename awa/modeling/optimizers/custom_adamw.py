@@ -1,9 +1,11 @@
 """
 This is a reduced custom implementation of the AdamW optimization algorithm
 """
+from typing import Callable, List
+
 import math
+
 from torch import Tensor
-from typing import List
 
 from awa.modeling.optimizers.custom_adamw_base import CustomAdamWBase
 
@@ -55,4 +57,5 @@ def custom_adamw(
 
 
 class CustomAdamW(CustomAdamWBase):
-    ADAMW_FUNCTION = custom_adamw
+    def get_adamw_function(self) -> Callable:
+        return custom_adamw
