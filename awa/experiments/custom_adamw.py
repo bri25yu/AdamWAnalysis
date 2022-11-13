@@ -3,20 +3,29 @@ from typing import Union
 from torch.nn import Module
 
 from awa.infra import TrainingPipeline, Env
-from awa.optimizer_mixins import CustomAdamWOptimizerMixin
-from awa.modeling import *
+from awa.modeling import CentersModel
+from awa.optimizer_mixins import (
+    CustomAdamWOptimizerMixin,
+    AdamWL1OptimizerMixin,
+    AdamWL1L2OptimizerMixin,
+)
 
 
-class CustomAdamWExperimentBase(CustomAdamWOptimizerMixin, TrainingPipeline):
-    MODEL_CLS: Union[None, type] = None
-
+class CustomAdamWExperimentBase(TrainingPipeline):
     def get_model(self, env: Env) -> Module:
-        model_cls = self.MODEL_CLS
-
-        return model_cls(env)
+        return CentersModel(env)
 
 
-class CentersCustomAdamWExperiment(CustomAdamWExperimentBase):
+class CustomAdamWExperiment(CustomAdamWOptimizerMixin, CustomAdamWExperimentBase):
     LR = 1e-2
     WEIGHT_DECAY = 1e-2
-    MODEL_CLS = CentersModel
+
+
+class AdamWL1Experiment(AdamWL1OptimizerMixin, CustomAdamWExperimentBase):
+    LR = 1e-2
+    WEIGHT_DECAY = 1e-2
+
+
+class AdamWL1L2Experiment(AdamWL1L2OptimizerMixin, CustomAdamWExperimentBase):
+    LR = 1e-2
+    WEIGHT_DECAY = 1e-2
