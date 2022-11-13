@@ -16,6 +16,12 @@ class AdamWExperimentBase(AdamWOptimizerMixin, TrainingPipeline):
         return model_cls(env)
 
 
+class TestAdamWExperiment(AdamWExperimentBase):
+    LR = 5e-3
+    WEIGHT_DECAY = 1e-2
+    MODEL_CLS = TestModel
+
+
 class ExactAdamWExperiment(AdamWExperimentBase):
     LR = 1e-100
     WEIGHT_DECAY = 1e-2
