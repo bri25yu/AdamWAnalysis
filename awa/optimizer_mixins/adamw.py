@@ -9,7 +9,7 @@ __all__ = [
     "CustomAdamWOptimizerMixin",
     "AdamWL1OptimizerMixin",
     "AdamWL1L2OptimizerMixin",
-    "AdamWL1WithGradOptimizerMixin",
+    "AdamWL1L2v2OptimizerMixin",
 ]
 
 
@@ -43,5 +43,5 @@ class AdamWL1L2OptimizerMixin(AdamWOptimizerMixinBase):
     OPTIMIZER_CLS = AdamWL1L2
 
 
-class AdamWL1WithGradOptimizerMixin(AdamWOptimizerMixinBase):
-    OPTIMIZER_CLS = AdamWL1WithGrad
+class AdamWL1L2v2OptimizerMixin(AdamWOptimizerMixinBase):
+    OPTIMIZER_CLS = AdamWL1L2v2

@@ -6,6 +6,7 @@ from awa.optimizer_mixins import (
     CustomAdamWOptimizerMixin,
     AdamWL1OptimizerMixin,
     AdamWL1L2OptimizerMixin,
+    AdamWL1L2v2OptimizerMixin,
 )
 
 
@@ -25,5 +26,10 @@ class AdamWL1Experiment(AdamWL1OptimizerMixin, CustomAdamWExperimentBase):
 
 
 class AdamWL1L2Experiment(AdamWL1L2OptimizerMixin, CustomAdamWExperimentBase):
+    LR = 1e-2
+    WEIGHT_DECAY = 1e-2
+
+
+class AdamWL1L2v2Experiment(AdamWL1L2v2OptimizerMixin, CustomAdamWExperimentBase):
     LR = 1e-2
     WEIGHT_DECAY = 1e-2
