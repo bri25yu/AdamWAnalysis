@@ -45,7 +45,7 @@ def adamw_l1l2(
 
         decay_factor = (lr * weight_decay) / 2
         param.mul_(1 - decay_factor)
-        param.add_(param.sign() * (-decay_factor))
+        param.sub_(param.sign(), alpha=decay_factor)
 
         ###############################
         # END L1 and L2 weight decay
