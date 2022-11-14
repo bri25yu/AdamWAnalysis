@@ -3,11 +3,12 @@ from typing import Union
 from torch.nn import Module
 
 from awa.infra import TrainingPipeline, Env
+from awa.vis_mixins.logs_and_env import LogsAndEnvVisMixin
 from awa.optimizer_mixins import AdamWOptimizerMixin
 from awa.modeling import *
 
 
-class AdamWExperimentBase(AdamWOptimizerMixin, TrainingPipeline):
+class AdamWExperimentBase(AdamWOptimizerMixin, LogsAndEnvVisMixin, TrainingPipeline):
     MODEL_CLS: Union[None, type] = None
 
     def get_model(self, env: Env) -> Module:
