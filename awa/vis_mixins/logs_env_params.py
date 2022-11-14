@@ -32,7 +32,7 @@ class LogsEnvParamsVisMixin:
         def setup_fig_axs():
             n_total_plots = len(vector_logs) + len(scalar_logs)
             rows, cols = (n_total_plots // 2) + (n_total_plots % 2), 2
-            fig, axs = subplots(rows, cols, figsize=(10 * cols, 8 * rows))
+            fig, axs = subplots(rows, cols, figsize=(10 * cols, 8 * rows), dpi=200)
 
             axs = axs.ravel()
             if (n_total_plots % 2):
@@ -55,10 +55,13 @@ class LogsEnvParamsVisMixin:
 
         def plot_scalars(step: int):
             steps = list(range(step+1))
-            return [
-                ax.plot(steps, values[:step+1], color="C0")
-                for ax, values in zip(scalar_axs, scalar_logs.values())
-            ]
+            artists = []
+            for ax, values in zip(scalar_axs, scalar_logs.values()):
+                artists.extend(
+                    ax.plot(steps, values[:step+1], color="C0")
+                )
+
+            return artists
 
         def plot_logits(step: int):
             # Scatterplot of 2D env
@@ -87,20 +90,21 @@ class LogsEnvParamsVisMixin:
                 va="center", ha="center",
                 transform=logits_ax.transAxes,
             )
+            artists.append(step_text)
 
-            return artists + [step_text]
+            return artists
 
         def plot_vectors(step: int):
             axs = vector_axs[1:]
             logs = {
-                v[step] for k, v in vector_logs.items() if k != "Eval logits"
+                k: v[step] for k, v in vector_logs.items() if k != "Eval logits"
             }
 
             artists = []
             for ax, (value_name, values) in zip(axs, logs.items()):
                 xs = values[:, 0]
                 ys = values[:, 1]
-                artists.append(ax.scatter(xs, ys))
+                artists.append(ax.scatter(xs, ys, color="C0"))
 
                 step_text = text(
                     x=.5, y=1.05,
@@ -120,7 +124,7 @@ class LogsEnvParamsVisMixin:
                 *plot_vectors(step),
             ])
 
-        with tqdm(total=n_steps, desc="Drawing and saving", leave=False) as pbar:
+        with tqdm(total=n_steps // plot_steps, desc="Drawing and saving", leave=False) as pbar:
             update_pbar = lambda current_step, total_steps: pbar.update(1)
 
             animation = ArtistAnimation(fig, artists, interval=1, blit=True)

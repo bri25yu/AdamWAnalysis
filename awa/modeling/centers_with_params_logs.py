@@ -48,7 +48,8 @@ class CentersWithParamsModel(ModelBase):
             logs={
                 "Offset": self.offset.data,
                 "Scale": self.scale.data,
-                "Plus minus": self.plus_minus.data,
+                "Plus minus 0": self.plus_minus.data[0, 0],
+                "Plus minus 1": self.plus_minus.data[0, 1],
                 "Centers": self.centers.data,
             }
         )
