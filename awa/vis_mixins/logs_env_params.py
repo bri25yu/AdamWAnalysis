@@ -145,7 +145,7 @@ class LogsEnvParamsVisMixin:
             **filter_by_size_len(logs, 2),
         })
         self.scalars_to_plot_over_time.append({
-            "Eval loss": loss,
+            "Eval loss": to_numpy(loss),
             **filter_by_size_len(logs, 0),
             **filter_by_size_len(logs, 1),
         })

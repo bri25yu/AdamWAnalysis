@@ -1,7 +1,7 @@
 from torch.nn import Module
 
 from awa.infra import TrainingPipeline, Env
-from awa.modeling import CentersModel
+from awa.modeling import CentersWithParamsModel
 from awa.vis_mixins.logs_env_params import LogsEnvParamsVisMixin
 from awa.optimizer_mixins import (
     CustomAdamWOptimizerMixin,
@@ -12,7 +12,7 @@ from awa.optimizer_mixins import (
 
 class CustomAdamWExperimentBase(LogsEnvParamsVisMixin, TrainingPipeline):
     def get_model(self, env: Env) -> Module:
-        return CentersModel(env)
+        return CentersWithParamsModel(env)
 
 
 class CustomAdamWExperiment(CustomAdamWOptimizerMixin, CustomAdamWExperimentBase):

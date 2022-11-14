@@ -146,13 +146,16 @@ class TrainingPipeline(ABC):
             predicted_labels = output.logits.argmax(dim=1)
             accuracy = (predicted_labels == labels).sum() / data.size()[0]
 
-        if is_eval:
+        if self.use_benchmark_logging and is_eval:
             self.store_eval_logs_to_visualize(output, loss)
+
+        logs = output.logs if output.logs else {}
+        logs = {k: v for k, v in logs.items() if len(v.size()) == 0}
 
         return {
             "loss": loss,
             "accuracy": accuracy,
-            **(output.logs if output.logs else {}),
+            **logs,
         }
 
     def log(self, logs: Dict[str, Any], prefix: str="", step: int=0) -> None:
