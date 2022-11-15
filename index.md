@@ -27,6 +27,7 @@ $$
 $$
 
 ### Exact algorithm
+
 $$
 \begin{align*}
 & f_\theta = \arg \min_C \left|\frac{X^T\mathcal{C}}{\|\mathcal{C}\|_2^2} - 1\right|
@@ -39,6 +40,7 @@ $$
 
 
 ### Learning which centers correspond to which class
+
 $$
 \begin{align*}
 & C_\theta = \text{Linear layer (} |\mathcal{C}||C| \text{ parameters)} \\
@@ -52,6 +54,7 @@ $$
 
 
 ### ...And learning that values closer to 1 are better
+
 $$
 \begin{align*}
 & C_\theta = \text{Linear layer (} |\mathcal{C}||C| \text{ parameters)} \\
@@ -66,6 +69,7 @@ $$
 
 
 ### ...And learning that larger scales leads to better softmax outputs
+
 $$
 \begin{align*}
 & C_\theta = \text{Linear layer (} |\mathcal{C}||C| \text{ parameters)} \\
@@ -81,6 +85,7 @@ $$
 
 
 ### ...And learning to use ReLU instead of absolute value
+
 $$
 \begin{align*}
 & C_\theta = \text{Linear layer (} |\mathcal{C}||C| \text{ parameters)} \\
@@ -97,6 +102,7 @@ $$
 
 
 ### ...And learning the centers from scratch
+
 $$
 \begin{align*}
 & C_\theta = \text{Linear layer (} |\mathcal{C}||C| \text{ parameters)} \\
