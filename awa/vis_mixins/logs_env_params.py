@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import os
 
 from tqdm.notebook import trange, tqdm
@@ -37,10 +39,11 @@ class LogsEnvParamsVisMixin:
                 rows = cols = 1
             fig, axs = subplots(rows, cols, figsize=(10 * cols, 8 * rows), dpi=200)
 
-            axs = axs.ravel()
-            if (n_total_plots % 2):
-                fig.delaxes(axs[-1])
-                axs = axs[:-1]
+            if isinstance(axs, Iterable):
+                axs = axs.ravel()
+                if (n_total_plots % 2):
+                    fig.delaxes(axs[-1])
+                    axs = axs[:-1]
 
             fig.suptitle(f"Final benchmark for {self.name}")
 
@@ -131,18 +134,18 @@ class LogsEnvParamsVisMixin:
 
         # Visualize logits
         logits_logs = {"Eval logits": vector_logs.pop("Eval logits")}
-        logits_fig, logits_axs = setup_fig_axs(logits_logs)
+        logits_fig, logits_ax = setup_fig_axs(logits_logs)
         logits_artists = [
-            plot_logits(step, logits_axs[0], logits_logs["Eval logits"])
+            plot_logits(step, logits_ax, logits_logs["Eval logits"])
             for step in trange(0, n_steps, plot_steps, leave=False, desc="Visualizing logits")
         ]
         save_fig(logits_fig, logits_artists, "logits")
 
         for value_name, value in vector_logs.items():
             value_logs = {value_name: value}
-            value_fig, value_axs = setup_fig_axs(value_logs)
+            value_fig, value_ax = setup_fig_axs(value_logs)
             value_artists = [
-                plot_vectors(step, value_axs, value_logs)
+                plot_vectors(step, value_ax, value_logs)
                 for step in trange(0, n_steps, plot_steps, leave=False, desc=f"Visualizing {value_name}")
             ]
             save_fig(value_fig, value_artists, value_name)
