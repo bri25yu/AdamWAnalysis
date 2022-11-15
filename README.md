@@ -10,6 +10,7 @@ We use a Voronoi partitioning of 2D space. We choose 2D space because it's easie
 
 ## Modeling
 All of the following equations use the following shared definitions.
+
 $$
 \begin{align*}
 & N = \text{batch size} \\
@@ -27,7 +28,7 @@ $$
 ### Exact algorithm
 $$
 \begin{align*}
-& f_\theta = \argmin_C \left|\frac{X^T\mathcal{C}}{\|\mathcal{C}\|_2^2} - 1\right|
+& f_\theta = \arg \min_C \left|\frac{X^T\mathcal{C}}{\|\mathcal{C}\|_2^2} - 1\right|
 \end{align*}
 $$
 
