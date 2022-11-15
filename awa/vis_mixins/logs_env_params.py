@@ -89,24 +89,21 @@ class LogsEnvParamsVisMixin:
 
             return artists
 
-        def plot_vectors(step: int, vector_axs, vector_logs):
-            logs = {
-                k: v[step] for k, v in vector_logs.items() if k != "Eval logits"
-            }
-
+        def plot_vector(step: int, ax, value_name, values_logs):
+            values = values_logs[step]
             artists = []
-            for ax, (value_name, values) in zip(vector_axs, logs.items()):
-                xs = values[:, 0]
-                ys = values[:, 1]
-                artists.append(ax.scatter(xs, ys, color="C0"))
 
-                step_text = text(
-                    x=.5, y=1.05,
-                    s=f"{value_name} | Train step: {step} / {n_steps}",
-                    va="center", ha="center",
-                    transform=ax.transAxes,
-                )
-                artists.append(step_text)
+            xs = values[:, 0]
+            ys = values[:, 1]
+            artists.append(ax.scatter(xs, ys, color="C0"))
+
+            step_text = text(
+                x=.5, y=1.05,
+                s=f"{value_name} | Train step: {step} / {n_steps}",
+                va="center", ha="center",
+                transform=ax.transAxes,
+            )
+            artists.append(step_text)
 
             return artists
 
@@ -141,11 +138,11 @@ class LogsEnvParamsVisMixin:
         ]
         save_fig(logits_fig, logits_artists, "logits")
 
-        for value_name, value in vector_logs.items():
-            value_logs = {value_name: value}
+        for value_name, values in vector_logs.items():
+            value_logs = {value_name: values}
             value_fig, value_ax = setup_fig_axs(value_logs)
             value_artists = [
-                plot_vectors(step, value_ax, value_logs)
+                plot_vector(step, value_ax, value_name, values)
                 for step in trange(0, n_steps, plot_steps, leave=False, desc=f"Visualizing {value_name}")
             ]
             save_fig(value_fig, value_artists, value_name)

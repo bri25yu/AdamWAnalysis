@@ -2,22 +2,22 @@
     <script type="text/x-mathjax-config">
         MathJax.Hub.Config({
             TeX: {
-            equationNumbers: {
-                autoNumber: "AMS"
-            }
+                equationNumbers: {
+                    autoNumber: "AMS"
+                }
             },
             tex2jax: {
-            inlineMath: [ ['$', '$'] ],
-            displayMath: [ ['$$', '$$'] ],
-            processEscapes: true,
-        }
+                inlineMath: [ ['$', '$'] ],
+                displayMath: [ ['\[', '\]'] ],
+                processEscapes: true,
+            }
         });
         MathJax.Hub.Register.MessageHook("Math Processing Error",function (message) {
             alert("Math Processing Error: "+message[1]);
-            });
+        });
         MathJax.Hub.Register.MessageHook("TeX Jax - parse error",function (message) {
             alert("Math Processing Error: "+message[1]);
-            });
+        });
     </script>
     <script type="text/javascript" async
         src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
@@ -26,8 +26,7 @@
 </head>
 
 
-# AdamWAnalysis
-
+## Setup
 ### Example of an env
 We use a Voronoi partitioning of 2D space. We choose 2D space because it's easiest to visualize. We choose Voronoi partitions because it's very hard for a deep neural network to learn. 
 
