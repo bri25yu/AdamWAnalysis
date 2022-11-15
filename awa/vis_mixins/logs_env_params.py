@@ -37,7 +37,7 @@ class LogsEnvParamsVisMixin:
                 rows, cols = (n_total_plots // 2) + (n_total_plots % 2), 2
             else:
                 rows = cols = 1
-            fig, axs = subplots(rows, cols, figsize=(10 * cols, 8 * rows), dpi=200)
+            fig, axs = subplots(rows, cols, figsize=(10 * cols, 8 * rows))
 
             if isinstance(axs, Iterable):
                 axs = axs.ravel()
@@ -66,15 +66,11 @@ class LogsEnvParamsVisMixin:
 
             preds = logits.argmax(axis=1)
 
-            probs = exp(logits)
-            probs: ndarray = probs / probs.sum(axis=1, keepdims=True)
-            probs = probs.max(axis=1)
-
             artists = []
             for group in unique(preds):
                 mask = preds == group
                 artists.append(
-                    logits_ax.scatter(xs[mask], ys[mask], label=group, color=f"C{group}", alpha=probs[mask])
+                    logits_ax.scatter(xs[mask], ys[mask], label=group, color=f"C{group}")
                 )
 
             # Title with extra info
