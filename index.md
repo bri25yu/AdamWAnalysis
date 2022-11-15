@@ -1,3 +1,5 @@
+# AdamW Analysis
+
 ## Setup
 ### Example of an env
 We use a Voronoi partitioning of 2D space. We choose 2D space because it's easiest to visualize. We choose Voronoi partitions because it's very hard for a deep neural network to learn. 
@@ -115,23 +117,26 @@ $$
 
 ### AdamW L2 weight decay (default)
 
-![](results/CustomAdamWExperiment/benchmark_vectors.gif)
 ![](results/CustomAdamWExperiment/benchmark_scalars.gif)
+![](results/CustomAdamWExperiment/benchmark_logits.gif)
+![](results/CustomAdamWExperiment/benchmark_Centers.gif)
 
 <div style="page-break-after: always;"></div>
 
 
 ### AdamW L1 weight decay
 
-![](results/AdamWL1Experiment/benchmark_vectors.gif)
 ![](results/AdamWL1Experiment/benchmark_scalars.gif)
+![](results/AdamWL1Experiment/benchmark_logits.gif)
+![](results/AdamWL1Experiment/benchmark_Centers.gif)
 
 <div style="page-break-after: always;"></div>
 
 
 ### AdamW L1 and L2 proportional weight decay
 
-![](results/AdamWL1L2Experiment/benchmark_vectors.gif)
 ![](results/AdamWL1L2Experiment/benchmark_scalars.gif)
+![](results/AdamWL1L2Experiment/benchmark_logits.gif)
+![](results/AdamWL1L2Experiment/benchmark_Centers.gif)
 
 <div style="page-break-after: always;"></div>
