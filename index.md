@@ -146,3 +146,7 @@ $$
 ![](results/AdamWL1L2Experiment/benchmark_Centers.gif)
 
 <div style="page-break-after: always;"></div>
+
+
+Next steps:
+L1 reg promotes stability. L2 reg promotes learning through instability. Is there a way to reconcile them both?
