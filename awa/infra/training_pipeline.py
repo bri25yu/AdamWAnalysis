@@ -150,7 +150,7 @@ class TrainingPipeline(ABC):
             self.store_eval_logs_to_visualize(output, loss)
 
         logs = output.logs if output.logs else {}
-        logs = {k: v for k, v in logs.items() if len(v.size()) == 0}
+        logs = {k: v for k, v in logs.items() if v.size() in ((), (1,))}
 
         return {
             "loss": loss,

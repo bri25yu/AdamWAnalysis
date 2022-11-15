@@ -15,7 +15,7 @@ class TestModel(ModelBase):
         num_centers = 2048
 
         # We manually initialize centers to be on the scale of [-100, 100]
-        self.centers = Parameter(100 * randn((num_centers, 2)))
+        self.centers = Parameter(100 * randn((num_centers, env.D)))
 
         # We manually initialize plus minus to have positive and negative values
         # We multiply by 0.4 to be farther away from 0, but not as strong as 1
@@ -50,5 +50,6 @@ class TestModel(ModelBase):
                 "Scale": self.scale.data,
                 "Plus minus 0": self.plus_minus.data[0, 0],
                 "Plus minus 1": self.plus_minus.data[0, 1],
+                "Centers": self.centers.data,
             }
         )

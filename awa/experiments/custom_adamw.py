@@ -31,5 +31,8 @@ class AdamWL1L2Experiment(AdamWL1L2OptimizerMixin, CustomAdamWExperimentBase):
 
 
 class TestAdamWL1Experiment(AdamWL1OptimizerMixin, LogsEnvParamsVisMixin, TrainingPipeline):
+    LR = 1e-2
+    WEIGHT_DECAY = 1e-2
+
     def get_model(self, env: Env) -> Module:
         return TestModel(env)
