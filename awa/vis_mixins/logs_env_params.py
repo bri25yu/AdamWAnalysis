@@ -37,7 +37,7 @@ class LogsEnvParamsVisMixin:
                 rows, cols = (n_total_plots // 2) + (n_total_plots % 2), 2
             else:
                 rows = cols = 1
-            fig, axs = subplots(rows, cols, figsize=(10 * cols, 8 * rows))
+            fig, axs = subplots(rows, cols, figsize=(10 * cols, 8 * rows), dpi=200)
 
             if isinstance(axs, Iterable):
                 axs = axs.ravel()
