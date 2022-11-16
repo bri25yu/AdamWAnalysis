@@ -10,6 +10,8 @@ We use a Voronoi partitioning of 2D space. We choose 2D space because it's easie
 
 
 ## Modeling
+We start by creating a model that is able to learn in this environment and uses tools from state-of-the-art models today, namely ReLU, softmax, unbiased linear layers, and layernorms.
+
 All of the following equations use the following shared definitions.
 
 $$
@@ -28,9 +30,17 @@ $$
 
 ### Exact algorithm
 
+This is the algorithm with full information. The fact that it has 100% accuracy but nonzero loss is an artifact of crossentropy loss, where 0/1 predictions output a minimum of $\frac{1}{e+1}$ loss.
+
+Specifically, the algorithm has access to:
+- centers (and the fact that there are centers)
+- classes and which centers correspond to which classes
+- function to map an input to its corresponding center and class
+
+
 $$
 \begin{align*}
-& f_\theta = \arg \min_C \left|\frac{X^T\mathcal{C}}{\|\mathcal{C}\|_2^2} - 1\right|
+& f_\theta = \arg \min_C \left\lvert\frac{X^T\mathcal{C}}{\|\mathcal{C}\|_2^2} - 1\right\rvert
 \end{align*}
 $$
 
@@ -41,10 +51,16 @@ $$
 
 ### Learning which centers correspond to which class
 
+Very easy classification task, given that the model knows a lot about the structure of the environment. 
+
+The parameterized classification head is able to better condition to the crossentropy loss, allowing the loss to reach nearly 0. The majority class weight increases to positive infinity and the minority class weight decreases to negative infinity, which are probability 1 and 0 after softmax respectively. 
+
+This model doesn't reach 100% accuracy, probably because there's very small Voronoi compartments that the model hasn't seen training data for yet.
+
 $$
 \begin{align*}
 & C_\theta = \text{Linear layer (} |\mathcal{C}||C| \text{ parameters)} \\
-& f_\theta = \text{softmax}\left(-\left|\frac{X^T\mathcal{C}}{\|\mathcal{C}\|_2^2} - 1\right|\right)C_\theta
+& f_\theta = \text{softmax}\left(-\left\lvert \frac{X^T\mathcal{C}}{\|\mathcal{C}\|_2^2} - 1\right\rvert \right)C_\theta
 \end{align*}
 $$
 
@@ -54,6 +70,10 @@ $$
 
 
 ### ...And learning that values closer to 1 are better
+
+We start slowly building towards our parameterized layernorm by first parameterizing the offset or bias. 
+
+Notice that only parameterizing an offset without a scaling weight is poorly conditioned -- the eval loss is very noisy and there is a lot of variance in the classifications over steps. This is due to the nature of softmax -- values that are closer together more evenly distribute softmax weight which decreases expressivity. 
 
 $$
 \begin{align*}

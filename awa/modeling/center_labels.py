@@ -38,4 +38,11 @@ class CenterLabelsModel(ModelBase):
 
         logits = self.center_logits(center_probs)  # (batch_size, C)
 
-        return ModelOutput(logits=logits)
+        return ModelOutput(
+            logits=logits,
+            logs={
+                "Majority class weight": logits.max(dim=1)[0].mean(),
+                "Minority class weight": logits.min(dim=1)[0].mean(),
+                "Classification confidence": softmax(logits, dim=1).max(dim=1)[0].mean(),
+            }
+        )

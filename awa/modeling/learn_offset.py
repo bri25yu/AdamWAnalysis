@@ -42,6 +42,12 @@ class LearnOffsetModel(ModelBase):
 
         logits = self.center_logits(center_probs)  # (batch_size, C)
 
+        top2 = closest_to_1.topk(2, dim=1, largest=False).values
+
         return ModelOutput(
-            logits=logits, logs={"Offset": self.offset.data}
+            logits=logits,
+            logs={
+                "Offset": self.offset.data,
+                "Softmax logits top 2 difference": (top2[:, 1] - top2[:, 0]).mean(),
+            },
         )
