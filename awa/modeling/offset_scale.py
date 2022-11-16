@@ -39,10 +39,15 @@ class OffsetScaleModel(ModelBase):
 
         logits = self.center_logits(center_probs)  # (batch_size, C)
 
+        logits_top2 = closest_to_1.topk(2, dim=1).values
+        centers_top2 = center_probs.topk(2, dim=1).values
+
         return ModelOutput(
             logits=logits,
             logs={
                 "Offset": self.offset.data,
                 "Scale": self.scale.data,
+                "Softmax logits top 2 difference": (logits_top2[:, 0] - logits_top2[:, 1]).mean(),
+                "Softmax probs top 2 difference": (centers_top2[:, 0] - centers_top2[:, 1]).mean(),
             }
         )
