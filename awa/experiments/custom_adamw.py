@@ -6,6 +6,7 @@ from awa.vis_mixins.logs_env_params import LogsEnvParamsVisMixin
 from awa.optimizer_mixins import (
     CustomAdamWOptimizerMixin,
     AdamWL1OptimizerMixin,
+    TestAdamWOptimizerMixin,
 )
 
 
@@ -24,7 +25,7 @@ class AdamWL1Experiment(AdamWL1OptimizerMixin, CustomAdamWExperimentBase):
     WEIGHT_DECAY = 1e-2
 
 
-class TestAdamWL1Experiment(AdamWL1OptimizerMixin, LogsEnvParamsVisMixin, TrainingPipeline):
+class TestAdamWExperiment(TestAdamWOptimizerMixin, LogsEnvParamsVisMixin, TrainingPipeline):
     LR = 1e-2
     WEIGHT_DECAY = 1e-2
 
