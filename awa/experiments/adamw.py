@@ -66,6 +66,6 @@ class CentersAdamWExperiment(AdamWExperimentBase):
 
 
 class SwishAdamWExperiment(AdamWExperimentBase):
-    LR = 1e-2
-    WEIGHT_DECAY = 1e-2
+    LR = 2e-2
+    WEIGHT_DECAY = 0.0
     MODEL_CLS = SwishModel

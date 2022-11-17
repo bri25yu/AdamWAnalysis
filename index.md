@@ -80,10 +80,34 @@ $$
 
 ![](results/CenterLabelsAdamWExperiment/benchmark.gif)
 
+This is a good example of different classes of convergence for different optimizers. Obviously convergence depends on a lot of factors, but here's a good starting point: the best stochastic optimizers will converge to optimums even given non-convergent sequences of gradients. 
+
+The prototypical scenario is when we have multiple steps of small gradient then one step of large gradient. The prototypical example is imbalanced classification, where minibatches of samples consist of the majority class and rarely contain the minority class which incur a large loss. The idea is that the optimizer is never able to really settle into either stationary point, either the local optimum of just the majority class or the global optimum of both classes. 
+
+Let $\mathcal{H}$ be our optimization horizon, in this case $\mathcal{H} = 10000$.
+
+1. Does the loss converge? $\limsup_{t \rightarrow \mathcal{H}} \mathcal{L}_t \stackrel{?}{=} \liminf_{t \rightarrow \mathcal{H}} \mathcal{L}_t$
+
+2. Does there exist a stationary distribution over the parameters?
+   - There exists no notion of absolute deterministic convergence with our stochastic optimization methods especially with regularization techniques such as weight decay.
+   - Let $\mathcal{T}$ be the update operator. $\stackrel{?}{\exists} \pi^*_\theta \text{ s.t. } \pi^*_\theta = \pi^*_\theta \mathcal{T}$
+
+3. Do the parameters converge to that stationary distribution? $\lim_{t \rightarrow \mathcal{H}}\pi^t_\theta = \pi^*_\theta$
+
+4. How quickly do the parameters converge to the stationary distribution?
+
+5. Finally we can start considering optimality
+
+We revisit these ideas later throughout.
+
 
 ### ...And learning that values closer to 1 are better
 
-We parameterize the offset/bias. Notice that only parameterizing an offset without a scaling weight is poorly conditioned -- the eval loss is very noisy and there is a lot of variance in the classifications over steps. This is due to the nature of softmax -- values that are closer together more evenly distribute softmax weight which decreases expressivity. 
+We parameterize the offset/bias.
+
+Notice that only parameterizing an offset without a scaling weight is poorly conditioned -- the eval loss is very noisy and there is a lot of variance in the classifications over steps. This is due to the nature of softmax -- values that are closer together more evenly distribute softmax weight which decreases expressivity. 
+
+Another reflection is that the learning rate used was half the learning rate of other experiments, 5e-3 rather than 1e-2. Otherwise the model wouldn't actually fit to the data.
 
 $$
 \begin{align*}
@@ -138,24 +162,39 @@ $$
 
 
 ### ...And learning the centers from scratch
-
 We parameterize the center locations. Every aspect of our model is parameterized now and the model starts with very little previous information.
 
 Note that as soon as we overparameterize our model, model values that should converge no longer converge. More analysis on this in the next section.
 
 $$
 \begin{align*}
+& H = \text{hidden size} \\
 & C_\theta = \text{Linear layer (} |\mathcal{C}||C| \text{ parameters)} \\
 & \text{offset}_\theta = \text{Offset (1 parameter)} \\
 & \text{scale}_\theta = \text{Softmax conditioning scale (1 parameter)} \\
 & \text{pm}_\theta = \text{Plus-minus parameter for learning absolute value (2 parameters)} \\
-& \mathcal{C}_\theta = \text{Learned Voronoi centers (2048} D \text{ parameters)}\\
+& \mathcal{C}_\theta = \text{Learned Voronoi centers (} HD \text{ parameters)}\\
 & f_\theta = \text{softmax}\left(-\text{scale}_\theta * \text{pm}_\theta * \text{ReLU}\left(\frac{X^T\mathcal{C}_\theta}{\|\mathcal{C}_\theta\|_2^2} - \text{offset}_\theta\right)\right)C_\theta
 \end{align*}
 $$
 
 ![](results/CentersAdamWExperiment/benchmark.gif)
 
+### [Work in progress] Generalizing parameter structures
+
+This is run with learning rate of 2e-2 and a weight decay of 0. 
+
+$$
+\begin{align*}
+& H = \text{hidden size} \\
+& C_\theta = \text{Linear layer (} |\mathcal{C}||C| \text{ parameters)} \\
+& \text{scale}_\theta = \text{Softmax conditioning scale (H parameters)} \\
+& \mathcal{C}_\theta = \text{Learned Voronoi centers with bias (} H(D + 1) \text{ parameters)}\\
+& f_\theta = \text{softmax}\left(-\text{scale}_\theta * \left|X^T\mathcal{C}_\theta\right|\right ) C_\theta
+\end{align*}
+$$
+
+![](results/SwishAdamWExperiment/benchmark.gif)
 
 ## Optimization
 All experiments in this section use the same parameters as the modeling section.
@@ -175,8 +214,7 @@ $$
 
 
 ### AdamW L1 weight decay
-
-L1 weight decay introduces much less bias for large weights, which allows the model to learn more (hence the lower loss), and it allows our model parameters to actually converge. However, the stability in our model parameters actually causes instability in our loss because the model has more modeling capabity due to lower bias than in the L2 case. 
+L1 weight decay introduces much less bias for large weights, which allows the model to learn more (hence the lower loss), and it allows our model parameters to actually converge. However, the stability in our model parameters actually causes instability in our loss because the model has more modeling capacity due to lower bias than in the L2 case. 
 
 $$
 \theta_t \gets \theta_{t-1} - \gamma \lambda \text{sign}(\theta_{t-1})
@@ -185,3 +223,13 @@ $$
 ![](results/AdamWL1Experiment/benchmark_scalars.gif)
 ![](results/AdamWL1Experiment/benchmark_logits.gif)
 ![](results/AdamWL1Experiment/benchmark_Centers.gif)
+
+
+## Next steps
+- Fully general parameterized model
+- Compromising on bias introduced by L2 weight decay and instability introduced by L1 weight decay
+    - L2 weight decay dropout?
+    - L1 weight decay with EMA parameter statistics?
+    - Gradient dependent weight decay?
+      - Small gradients signal crystallization -> impose strong weight decay
+      - Large gradients signal learning -> impose weak weight decay

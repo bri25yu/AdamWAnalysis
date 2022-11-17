@@ -35,6 +35,5 @@ class SwishModel(ModelBase):
             logits=logits,
             logs={
                 "Scale": self.scale.data.mean(),
-                "Centers": self.centers.weight.data.T,
             }
         )
