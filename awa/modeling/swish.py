@@ -5,10 +5,10 @@ from awa.infra import Env
 from awa.modeling.base import ModelBase, ModelOutput
 
 
-__all__ = ["TestModel"]
+__all__ = ["SwishModel"]
 
 
-class TestModel(ModelBase):
+class SwishModel(ModelBase):
     def __init__(self, env: Env) -> None:
         super().__init__(env)
 

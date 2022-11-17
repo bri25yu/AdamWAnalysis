@@ -7,3 +7,4 @@ from awa.modeling.abs_using_relu import *
 from awa.modeling.plus_minus import *
 from awa.modeling.centers import *
 from awa.modeling.centers_with_params_logs import *
+from awa.modeling.swish import *

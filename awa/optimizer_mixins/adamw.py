@@ -21,7 +21,7 @@ class AdamWOptimizerMixinBase:
         optimizer_cls = self.OPTIMIZER_CLS
         lr = self.LR
         weight_decay = self.WEIGHT_DECAY
-        assert optimizer_cls and lr and weight_decay
+        assert optimizer_cls is not None and lr is not None and weight_decay is not None
 
         return optimizer_cls(params, lr=lr, weight_decay=weight_decay)
 

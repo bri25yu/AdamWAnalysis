@@ -15,6 +15,14 @@ class CustomAdamWExperimentBase(LogsEnvParamsVisMixin, TrainingPipeline):
         return CentersWithParamsModel(env)
 
 
+class TestAdamWExperiment(TestAdamWOptimizerMixin, LogsEnvParamsVisMixin, TrainingPipeline):
+    LR = 1e-2
+    WEIGHT_DECAY = 1e-2
+
+    def get_model(self, env: Env) -> Module:
+        return TestModel(env)
+
+
 class CustomAdamWExperiment(CustomAdamWOptimizerMixin, CustomAdamWExperimentBase):
     LR = 1e-2
     WEIGHT_DECAY = 1e-2
@@ -23,11 +31,3 @@ class CustomAdamWExperiment(CustomAdamWOptimizerMixin, CustomAdamWExperimentBase
 class AdamWL1Experiment(AdamWL1OptimizerMixin, CustomAdamWExperimentBase):
     LR = 1e-2
     WEIGHT_DECAY = 1e-2
-
-
-class TestAdamWExperiment(TestAdamWOptimizerMixin, LogsEnvParamsVisMixin, TrainingPipeline):
-    LR = 1e-2
-    WEIGHT_DECAY = 1e-2
-
-    def get_model(self, env: Env) -> Module:
-        return TestModel(env)
