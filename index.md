@@ -90,11 +90,11 @@ The prototypical scenario is when we have multiple steps of small gradient then 
 
 Let $\mathcal{H}$ be our optimization horizon, in this case $\mathcal{H} = 10000$.
 
-1. Does the loss converge? $\limsup_{t \rightarrow \mathcal{H}} \mathcal{L}_t \stackrel{?}{=} \liminf_{t \rightarrow \mathcal{H}} \mathcal{L}_t$
+1. Does the loss converge? $\limsup_{t \rightarrow \mathcal{H}} \mathcal{L}_t ?= \liminf_{t \rightarrow \mathcal{H}} \mathcal{L}_t$
 
 2. Does there exist a stationary distribution over the parameters?
    - There exists no notion of absolute deterministic convergence with our stochastic optimization methods especially with regularization techniques such as weight decay.
-   - Let $\mathcal{T}$ be the update operator. $\stackrel{?}{\exists} \pi^*_\theta \text{ s.t. } \pi^*_\theta = \pi^*_\theta \mathcal{T}$
+   - Let $\mathcal{T}$ be the update operator. $\exists \pi^*_\theta \text{ s.t. } \pi^*_\theta = \pi^*_\theta \mathcal{T}$
 
 3. Do the parameters converge to that stationary distribution? $\lim_{t \rightarrow \mathcal{H}}\pi^t_\theta = \pi^*_\theta$
 
