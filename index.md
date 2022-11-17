@@ -43,6 +43,10 @@ $$
 \end{align*}
 $$
 
+Here is the AdamW algorithm for reference.
+
+![](vis_output/adamw%20alg.PNG)
+
 
 ### Exact algorithm
 
