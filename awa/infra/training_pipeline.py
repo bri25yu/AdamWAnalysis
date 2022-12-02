@@ -86,6 +86,7 @@ class TrainingPipeline(ABC):
             self.log({"loss": loss}, "train", i)
             if (i+1) % eval_steps == 0:
                 self.log(self.compute_metrics(model, val_data, val_labels, loss_fn, is_eval=True), "eval", i)
+                self.log_weights(model, i)
 
         self.log(self.compute_metrics(model, test_data, test_labels, loss_fn), "test", i+1)
         if self.use_benchmark_logging:
@@ -162,12 +163,16 @@ class TrainingPipeline(ABC):
 
     def log(self, logs: Dict[str, Any], prefix: str="", step: int=0) -> None:
         for value_name, value in logs.items():
-            if value_name.endswith("_weight"):
-                self.logger.add_histogram(value_name, value, step)
-            elif value.size() in ((), (1,)):
+            if value.size() in ((), (1,)):
                 self.logger.add_scalar(f"{value_name}_{prefix}", value, step)
             else:
                 raise NotImplementedError
+
+        self.logger.flush()
+
+    def log_weights(self, model: Module, step: int) -> None:
+        for name, param in model.named_parameters():
+            self.logger.add_histogram(name, param, step)
 
         self.logger.flush()
 

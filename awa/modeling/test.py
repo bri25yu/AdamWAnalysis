@@ -41,6 +41,5 @@ class TestModel(ModelBase):
             logits=logits,
             logs={
                 "value_center_probs": center_probs.max(dim=1)[0].mean(),
-                "classification_head_last_layer_weight": self.classification_head.dense[-1].weight.data,
             }
         )
