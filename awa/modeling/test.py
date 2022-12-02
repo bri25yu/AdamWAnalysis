@@ -25,7 +25,7 @@ class TestModel(ModelBase):
     def __init__(self, env: Env) -> None:
         super().__init__(env)
 
-        hidden_dim = 2048
+        hidden_dim = 512
 
         self.dense = Dense(env.D, hidden_dim, hidden_dim)
         self.classification_head = Dense(hidden_dim, hidden_dim, env.C)
@@ -41,5 +41,6 @@ class TestModel(ModelBase):
             logits=logits,
             logs={
                 "value_center_probs": center_probs.max(dim=1)[0].mean(),
+                "classification_head_last_layer": self.classification_head.dense[-1].weight.data,
             }
         )

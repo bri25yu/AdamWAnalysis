@@ -160,7 +160,10 @@ class TrainingPipeline(ABC):
 
     def log(self, logs: Dict[str, Any], prefix: str="", step: int=0) -> None:
         for value_name, value in logs.items():
-            self.logger.add_scalar(f"{value_name}_{prefix}", value, step)
+            if value_name.endswith("_weight"):
+                self.logger.add_histogram(value_name, value, step)
+            else:
+                self.logger.add_scalar(f"{value_name}_{prefix}", value, step)
 
         self.logger.flush()
 

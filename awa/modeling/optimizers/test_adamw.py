@@ -39,11 +39,12 @@ def test_adamw(
         # START test weight decay
         ###############################
 
-        # Original code:
-        # Perform stepweight decay
+        # L2
         # param.mul_(1 - lr * weight_decay)
+        # L1
+        # param.sub_(param.sign(), alpha=lr * weight_decay)
 
-        param.sub_(param.sign(), alpha=lr * weight_decay)
+        param.sub_(param.abs().min() * param.sign(), alpha=lr)
 
         ###############################
         # END test weight decay
@@ -63,6 +64,16 @@ def test_adamw(
         bias_correction2_sqrt = math.sqrt(bias_correction2)
 
         denom = (exp_avg_sq.sqrt() / bias_correction2_sqrt).add_(eps)
+
+        ###############################
+        # START test weight decay
+        ###############################
+
+        param.mul_(1 - lr * weight_decay)
+
+        ###############################
+        # END test weight decay
+        ###############################
 
         param.addcdiv_(exp_avg, denom, value=-step_size)
 

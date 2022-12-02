@@ -1,7 +1,8 @@
 from torch.nn import Module
 
 from awa.infra import TrainingPipeline, Env
-from awa.modeling import CentersWithParamsModel, TestModel
+from awa.modeling import TestModel
+from awa.modeling.v1 import CentersWithParamsModel
 from awa.vis_mixins.logs_env_params import LogsEnvParamsVisMixin
 from awa.optimizer_mixins import (
     CustomAdamWOptimizerMixin,
