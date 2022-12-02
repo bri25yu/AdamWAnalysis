@@ -1,5 +1,5 @@
-from torch import Tensor, softmax, ones
-from torch.nn import Parameter, Linear, SiLU
+from torch import Tensor, softmax
+from torch.nn import Linear, ReLU, Sequential, Module
 
 from awa.infra import Env
 from awa.modeling.base import ModelBase, ModelOutput
@@ -8,33 +8,38 @@ from awa.modeling.base import ModelBase, ModelOutput
 __all__ = ["TestModel"]
 
 
+class Dense(Module):
+    def __init__(self, in_dim: int, hidden_dim: int, out_dim: int) -> None:
+        super().__init__()
+        self.dense = Sequential(
+            Linear(in_dim, hidden_dim, bias=False),
+            ReLU(),
+            Linear(hidden_dim, out_dim, bias=False),
+        )
+
+    def forward(self, inputs: Tensor) -> Tensor:
+        return self.dense(inputs)
+
+
 class TestModel(ModelBase):
     def __init__(self, env: Env) -> None:
         super().__init__(env)
 
-        num_centers = 2048
+        hidden_dim = 2048
 
-        self.centers = Linear(env.D, num_centers)
-        self.activation = SiLU()
-
-        self.scale = Parameter(ones((1, num_centers)))
-
-        self.center_logits = Linear(num_centers, env.C, bias=False)
+        self.dense = Dense(env.D, hidden_dim, hidden_dim)
+        self.classification_head = Dense(hidden_dim, hidden_dim, env.C)
 
     def forward(self, inputs: Tensor) -> Tensor:
         inputs = inputs / 100
 
-        dot_products = self.centers(inputs)
-
-        center_scores = self.activation(dot_products)
-        center_probs = softmax(-self.scale * center_scores, dim=1)  # (batch_size, num_centers)
-
-        logits = self.center_logits(center_probs)  # (batch_size, C)
+        center_scores = self.dense(inputs)
+        center_probs = softmax(center_scores, dim=1)
+        logits = self.classification_head(center_probs)
 
         return ModelOutput(
             logits=logits,
             logs={
-                "Scale": self.scale.data.mean(),
-                "Centers": self.centers.weight.data.T,
+                "value_center_probs": center_probs.max(dim=1)[0].mean(),
             }
         )

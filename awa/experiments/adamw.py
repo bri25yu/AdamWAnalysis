@@ -5,7 +5,7 @@ from torch.nn import Module
 from awa.infra import TrainingPipeline, Env
 from awa.vis_mixins.logs_and_env import LogsAndEnvVisMixin
 from awa.optimizer_mixins import AdamWOptimizerMixin
-from awa.modeling import *
+from awa.modeling.v1 import *
 
 
 class AdamWExperimentBase(AdamWOptimizerMixin, LogsAndEnvVisMixin, TrainingPipeline):
