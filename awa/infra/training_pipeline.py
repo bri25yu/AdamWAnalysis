@@ -28,6 +28,7 @@ __all__ = ["TrainingPipeline"]
 
 class TrainingPipeline(ABC):
     NUM_STEPS = 10000
+    EVAL_STEPS = 50  # Eval 10000 / 50 = 200 times
     BATCH_SIZE = 32
     EVAL_EXAMPLES = 10000
     TEST_EXAMPLES = 10000
@@ -56,6 +57,7 @@ class TrainingPipeline(ABC):
 
     def run(self, seed: int=42, leave_tqdm=True) -> None:
         num_steps = self.NUM_STEPS
+        eval_steps = self.EVAL_STEPS
         batch_size = self.BATCH_SIZE
 
         np_seed(seed)
@@ -82,7 +84,8 @@ class TrainingPipeline(ABC):
             optimizer.step()
 
             self.log({"loss": loss}, "train", i)
-            self.log(self.compute_metrics(model, val_data, val_labels, loss_fn, is_eval=True), "eval", i)
+            if (i+1) % eval_steps == 0:
+                self.log(self.compute_metrics(model, val_data, val_labels, loss_fn, is_eval=True), "eval", i)
 
         self.log(self.compute_metrics(model, test_data, test_labels, loss_fn), "test", i+1)
         if self.use_benchmark_logging:
@@ -150,7 +153,6 @@ class TrainingPipeline(ABC):
             self.store_eval_logs_to_visualize(output, loss)
 
         logs = output.logs if output.logs else {}
-        logs = {k: v for k, v in logs.items() if v.size() in ((), (1,))}
 
         return {
             "loss": loss,
@@ -162,8 +164,10 @@ class TrainingPipeline(ABC):
         for value_name, value in logs.items():
             if value_name.endswith("_weight"):
                 self.logger.add_histogram(value_name, value, step)
-            else:
+            elif value.size() in ((), (1,)):
                 self.logger.add_scalar(f"{value_name}_{prefix}", value, step)
+            else:
+                raise NotImplementedError
 
         self.logger.flush()
 
