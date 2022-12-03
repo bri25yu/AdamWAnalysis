@@ -5,7 +5,7 @@ from awa.infra import Env
 from awa.modeling.base import ModelBase, ModelOutput
 
 
-__all__ = ["TestModel"]
+__all__ = ["FullyParameterizedModel"]
 
 
 class ReducedLayerNorm(Module):
@@ -43,7 +43,7 @@ class ReducedAttention(Module):
         return softmax(inputs, dim=1)
 
 
-class TestModel(ModelBase):
+class FullyParameterizedModel(ModelBase):
     def __init__(self, env: Env) -> None:
         super().__init__(env)
 
