@@ -13,7 +13,7 @@ __all__ = ["ModelConfig", "FinalModel"]
 @dataclass
 class ModelConfig:
     hidden_dim: int = 512
-    activation: str = "relu"  # ["relu", "swish", "gelu"]
+    nonlinearity: str = "relu"  # ["relu", "swish", "gelu"]
     weight_initialization: str = "uniform"  # ["uniform", "normal"]
     layernorm_normalization: bool = False
 
@@ -33,7 +33,7 @@ class ReducedLayerNorm(Module):
 
 
 class Dense(Module):
-    ACTIVATIONS = {
+    NONLINEARITIES = {
         "relu": ReLU,
         "swish": SiLU,
         "gelu": GELU,
@@ -45,7 +45,7 @@ class Dense(Module):
         super().__init__()
         self.layernorm = ReducedLayerNorm(config, in_dim)
         self.linear1 = Linear(in_dim, hidden_dim, bias=False)
-        self.nonlinearity = self.ACTIVATIONS[config.activation]()
+        self.nonlinearity = self.NONLINEARITIES[config.nonlinearity]()
         self.linear2 = Linear(hidden_dim, out_dim, bias=False)
 
         if config.weight_initialization == "uniform":
