@@ -20,6 +20,8 @@ __all__ = ["FinalModelExperiment"]
 
 class FinalModelExperiment(AdamWOptimizerMixin, NoVisMixin, TrainingPipeline):
     BATCH_SIZE = 1024
+    LR = 2e-3
+    WEIGHT_DECAY = 1e-2
     LEARNING_RATES = [2e-3, 3e-3, 5e-3]
 
     def get_model(self, env: Env) -> Module:

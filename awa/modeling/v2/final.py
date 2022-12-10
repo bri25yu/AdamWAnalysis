@@ -79,9 +79,9 @@ class FinalModel(ModelBase):
     def __init__(self, env: Env, config: ModelConfig) -> None:
         super().__init__(env)
 
-        self.dense = Dense(env.D, config.hidden_dim, config.hidden_dim)
-        self.attention = ReducedAttention(config.hidden_dim)
-        self.classification_head = Dense(config.hidden_dim, config.hidden_dim, env.C)
+        self.dense = Dense(config, env.D, config.hidden_dim, config.hidden_dim)
+        self.attention = ReducedAttention(config, config.hidden_dim)
+        self.classification_head = Dense(config, config.hidden_dim, config.hidden_dim, env.C)
         self.final_layer_norm = ReducedLayerNorm(config, env.C)
 
     def forward(self, inputs: Tensor) -> Tensor:
