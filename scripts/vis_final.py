@@ -140,7 +140,7 @@ def nonlinearities():
 
 
 def weight_initialization():
-    fig_name = "weight_initialization"
+    fig_name = "Weight initialization"
     configs = {
         "Uniform (Baseline)": "FinalModelExperiment",
         "Normal": "WeightInitializationExperiment",
