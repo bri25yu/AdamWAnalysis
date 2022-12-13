@@ -1,4 +1,5 @@
 # AdamW Analysis
+For a copy of the report, see ![](assets/AdamW%20Analysis.pdf)
 
 ## Setup
 ### Example of an env
